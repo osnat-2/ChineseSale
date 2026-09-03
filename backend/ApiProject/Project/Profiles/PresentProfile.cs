@@ -8,8 +8,8 @@ namespace Project
     {
         public PresentProfile()
         {
-            CreateMap<PresentDto, Present>()
-            .ForMember(destination => destination.IsActive, options => options.MapFrom(_ => true));
+            CreateMap<PresentDto, Present>();
+            // .ForMember(destination => destination.IsActive, options => options.MapFrom(_ => true));
         }
     }
 }

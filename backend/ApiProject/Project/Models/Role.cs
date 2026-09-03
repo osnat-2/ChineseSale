@@ -2,9 +2,10 @@
 
 namespace Project.Models
 {
-    public class Category : BaseModel
+    public class Role : BaseModel
     {
         [Required]
         public string Name { get; set; }
+        public string Description { get; set; }
     }
 }

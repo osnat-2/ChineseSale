@@ -8,8 +8,8 @@ namespace Project
     {
         public CategoryProfile()
         {
-        CreateMap<CategoryDto, Category>()
-            .ForMember(destination => destination.IsActive, options => options.MapFrom(_ => true));
+        CreateMap<CategoryDto, Category>();
+            // .ForMember(destination => destination.IsActive, options => options.MapFrom(_ => true));
         }
     }
 }

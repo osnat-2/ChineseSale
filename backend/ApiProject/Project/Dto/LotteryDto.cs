@@ -3,6 +3,6 @@
 {
     public class LotteryDto
     {
-        public DateTime Year { get; set; }
+        // public DateTime Time { get; set; }
     }
 }

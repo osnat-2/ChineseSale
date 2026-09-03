@@ -1,9 +1,12 @@
-﻿namespace Project.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Project.Models
 {
-    public class Lottery
+    public class Lottery : BaseModel
     {
-        public int Id { get; set; }
+        [Required]
         public DateOnly Time { get; set; }
+        [Required]
         public bool IsMadeOut { get; set; }
     }
 }

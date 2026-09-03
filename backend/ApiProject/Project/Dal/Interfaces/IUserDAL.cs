@@ -1,6 +1,6 @@
 ﻿using Project.Models;
 
-namespace Project.DAL.Interfaces
+namespace Project.Dal.Interfaces
 {
     public interface IUserDal
     {

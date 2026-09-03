@@ -1,7 +1,7 @@
 ﻿using Project.Models;
 using Project.Models.ModelsDTO;
 
-namespace Project.DAL.Interfaces
+namespace Project.Dal.Interfaces
 {
     public interface IPresentDal
     {

@@ -2,7 +2,7 @@
 using Project.BLL.Interfaces;
 using Project.DAL.Interfaces;
 using Project.Models;
-using Project.Models.ModelsDTO;
+using Project.Dal.Interfaces;
 
 namespace Project.BLL
 {

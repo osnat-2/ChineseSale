@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Project.Models
 {
-    public class User : BaseModel
+    public class UserRole : BaseModel
     {
         [Required]
         [MaxLength(100)]
@@ -19,9 +19,9 @@ namespace Project.Models
         [MaxLength(18)]
         [MinLength(4)]
         public string? Password { get; set; } = "";
-        // [Required]
+        [Required]
         // [DefaultValue("User")]
-        // public int RoleId { get; set; }
-        // public Role Role { get; set; }
+        public int RoleId { get; set; }
+        public Role Role { get; set; }
     }
 }

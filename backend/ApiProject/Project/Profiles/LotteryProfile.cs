@@ -8,8 +8,8 @@ namespace Project.Profiles
     {
         public LotteryProfile()
         {
-        CreateMap<LotteryDto, Lottery>()
-            .ForMember(destination => destination.IsMadeOut, options => options.MapFrom(_ => false));
+        CreateMap<LotteryDto, Lottery>();
+            // .ForMember(destination => destination.IsMadeOut, options => options.MapFrom(_ => false));
         }
     }
 }
