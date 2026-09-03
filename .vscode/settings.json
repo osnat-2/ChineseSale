@@ -7,6 +7,8 @@
         "/^git status --short --branch; git branch -vv; git remote -v; git log -5 --oneline --decorate$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "git push": true,
+        "git remote": true
     }
 }
