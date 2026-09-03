@@ -1,0 +1,105 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h1 class="auth-title">Register</h1>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      <span class="alert-icon">⚠</span>
+      <p class="alert-text">{{ errorMessage }}</p>
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="alert alert-success">
+      <span class="alert-icon">✓</span>
+      <p class="alert-text">{{ successMessage }}</p>
+    </div>
+
+    <!-- Register Form -->
+    <form [formGroup]="registerForm" (ngSubmit)="register()" class="auth-form">
+      <!-- Name Field -->
+      <div class="form-group">
+        <label for="name" class="form-label">Full Name</label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          class="form-input"
+          placeholder="Enter your full name"
+          [disabled]="isSubmitting"
+        />
+        <div *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" class="error-message">
+          <span *ngIf="registerForm.get('name')?.hasError('required')">Name is required</span>
+          <span *ngIf="registerForm.get('name')?.hasError('minlength')">Name must be at least 2 characters</span>
+        </div>
+      </div>
+
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="form-input"
+          placeholder="Enter your email"
+          [disabled]="isSubmitting"
+        />
+        <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="error-message">
+          <span *ngIf="registerForm.get('email')?.hasError('required')">Email is required</span>
+          <span *ngIf="registerForm.get('email')?.hasError('email')">Please enter a valid email</span>
+        </div>
+      </div>
+
+      <!-- Phone Field -->
+      <div class="form-group">
+        <label for="phone" class="form-label">Phone Number</label>
+        <input
+          id="phone"
+          type="tel"
+          formControlName="phone"
+          class="form-input"
+          placeholder="Enter your phone number"
+          [disabled]="isSubmitting"
+        />
+        <div *ngIf="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched" class="error-message">
+          <span *ngIf="registerForm.get('phone')?.hasError('required')">Phone number is required</span>
+          <span *ngIf="registerForm.get('phone')?.hasError('minlength')">Phone number must be at least 10 digits</span>
+        </div>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          class="form-input"
+          placeholder="Create a password"
+          [disabled]="isSubmitting"
+        />
+        <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="error-message">
+          <span *ngIf="registerForm.get('password')?.hasError('required')">Password is required</span>
+          <span *ngIf="registerForm.get('password')?.hasError('minlength')">Password must be at least 6 characters</span>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="registerForm.invalid || isSubmitting"
+      >
+        {{ isSubmitting ? 'Registering...' : 'Register' }}
+      </button>
+    </form>
+
+    <!-- Login Link -->
+    <div class="auth-footer">
+      <p class="footer-text">
+        Already have an account?
+        <a routerLink="/login" class="auth-link">Login here</a>
+      </p>
+    </div>
+  </div>
+</div>

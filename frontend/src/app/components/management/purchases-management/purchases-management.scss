@@ -1,0 +1,21 @@
+.purchases-container {
+  padding: 16px;
+}
+.purchases-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.purchases-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.purchases-table th, .purchases-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+.empty-state {
+  margin-top: 12px;
+  color: #666;
+}
