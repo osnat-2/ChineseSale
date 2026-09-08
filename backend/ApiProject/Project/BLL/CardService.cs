@@ -1,15 +1,16 @@
 ﻿using AutoMapper;
-using Project.BLL.Interfaces;
-using Project.DAL.Interfaces;
-using Project.Models;
+using Project.Bll.Interfaces;
 using Project.Dal.Interfaces;
+using Project.Dto;
+using Project.Models;
 
-namespace Project.BLL
+namespace Project.Bll
 {
     public class CardService : ICardService
     {
-        ICardDal _cardDal;
-        IMapper _mapper;
+        private readonly ICardDal _cardDal;
+        private readonly IMapper _mapper;
+
         public CardService(ICardDal cardDal, IMapper mapper)
         {
             _cardDal = cardDal;
@@ -18,16 +19,16 @@ namespace Project.BLL
 
         public async Task<Result<Card>> AddCard(CardDto cardDto)
         {
-            ///validation
-            if (cardDto != null && cardDto.PresentId > 0 && cardDto.UserId > 0)
+            if (cardDto != null && cardDto.PresentId > 0)
             {
-                var c = _mapper.Map<Card>(cardDto);
-                return await _cardDal.AddCard(c);
+                var card = _mapper.Map<Card>(cardDto);
+                return await _cardDal.AddCard(card);
             }
+
             return new Result<Card>
             {
                 Success = false,
-                Message = "one of the details worng",
+                Message = "PresentId is required.",
                 Data = null
             };
         }

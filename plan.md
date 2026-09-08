@@ -18,7 +18,7 @@ Build a complete Chinese sale web application with the existing ASP.NET Core API
 
 | Phase | Agent | Status | Approval |
 |---|---|---|---|
-| 1. Contract Baseline | `contract-baseline` | Revised sub-plan ready; awaiting execution approval | Pending |
+| 1. Contract Baseline | `contract-baseline` | Completed: backend contract-only fix validated; build succeeded with warnings | Approved |
 | 2. Auth | `auth` | Blocked by Phase 1 | Pending |
 | 3. Catalog | `catalog` | Blocked by Phase 1 | Pending |
 | 4. Purchase/Payment | `purchase-payment` | Blocked by Phases 1-2 | Pending |
@@ -58,6 +58,15 @@ The current worktree must be reconciled with those decisions before implementati
 - `Card` has no `UserId`; `BaseModel.CreatedBy` and `CreatedByUser` are the existing persisted user-linked fields. The proposed no-model-change ownership path is to set `Card.CreatedBy` server-side from `ClaimTypes.NameIdentifier` and treat it as the purchaser/owner for card queries and payment authorization. This semantic reuse must be called out in the implementation report because `CreatedBy` is also an audit field.
 - `Present.DonorId` already points to `User` through `Present.Donor`; donor filtering and management will use users whose role is `Donor`, subject to verified role persistence.
 
+### Phase 1 Verification Result
+
+Completed on 2026-09-08 under the contract-only backend correction pass.
+
+- Verified build command: `cd "c:\Users\משתמש\Desktop\Student\מסלול\Projects\ChineseSale\backend\ApiProject"; dotnet build Project.sln`
+- Result: backend build succeeded with 112 warnings and 0 errors in 2.3s.
+- Contract corrections applied without changing backend model files or migrations, including DTO alignment for `Present`, stale namespace cleanup, DAL property corrections, and removal of legacy `Category` / `User` navigation assumptions.
+- Residual risk: the project still emits 112 nullable/legacy warnings, and the winner flow remains intentionally deferred until the approved owner contract is implemented. These warnings are not blockers for the current contract-only phase, but they should be addressed in a later cleanup pass.
+
 ### Exact Proposed Changes Before Execution
 
 #### Step A: C# DTO and contract correction, first
@@ -69,7 +78,7 @@ Only after the user approves this sub-plan, inspect and correct DTOs against the
 - `backend/ApiProject/Project/Dto/PresentDto.cs`: define properties matching the unchanged `Present` model (`Name`, `Description`, `DonorId`, `CategoryId`, `ImageUrl`, `Quantity`, `Price`) and exclude base audit fields unless an endpoint explicitly requires them.
 - `backend/ApiProject/Project/Dto/CategoryDto.cs`, `DonorDto.cs`, `LotteryDto.cs`, and `WinnerDto.cs`: compare each DTO with its corresponding unchanged model and define only supported request/response fields. Donor DTOs represent `User` with a role, not a new `Donor` entity.
 - `backend/ApiProject/Project/Profiles/*.cs`: align AutoMapper profiles with the corrected DTO namespace and properties; prevent client DTO mapping from overwriting `Id`, `CreatedBy`, `CreatedAt`, `IsActive`, `IsPaid`, or other server-controlled values.
-- `backend/ApiProject/Project/Controllers/*.cs`, `BLL/*.cs`, and `Dal/*.cs`: replace stale DTO namespace imports and update property access to the corrected DTO contracts. Preserve endpoint names unless a compatibility alias is explicitly approved.
+- `backend/ApiProject/Project/Controllers/*.cs`, `Bll/*.cs`, and `Dal/*.cs`: replace stale DTO namespace imports and update property access to the corrected DTO contracts. Preserve endpoint names unless a compatibility alias is explicitly approved.
 - `backend/ApiProject/Project/Result.cs`: preserve the existing wrapper unless the verified login/feature contract requires a narrowly scoped response DTO. Login currently returns the JWT in `Result.Message`; document and consume that verified shape before proposing a response change.
 
 #### Step A security and role behavior
@@ -78,7 +87,7 @@ Only after the user approves this sub-plan, inspect and correct DTOs against the
 - User registration: force the default role to `User` through server logic using the available role design; Donor/Admin assignment must be an authorized operation.
 - Donor queries and writes: use `User` records filtered by the verified Donor role and existing `Present.DonorId` relationship.
 - Card creation: require authentication, derive `CreatedBy` from `ClaimTypes.NameIdentifier`, and ignore any client owner value.
-- Payment: add/enable controller, BLL, and DAL operations using the existing `Card.IsPaid` field, validating the authenticated `CreatedBy` owner. Do not add a payment entity or run a migration in this step.
+- Payment: add/enable controller, Bll, and DAL operations using the existing `Card.IsPaid` field, validating the authenticated `CreatedBy` owner. Do not add a payment entity or run a migration in this step.
 - Lottery/winners: expose the approved workflow only after verifying that existing `Lottery`, `Winner`, and `Card` fields can persist the required relationships. Any required model/schema repair remains a separate approval request; approval of the feature does not authorize unlisted model edits.
 
 #### Step B: Angular adaptation only after Step A
@@ -152,8 +161,43 @@ Run backend and Angular builds/tests, API and database checks, and the complete 
 - Migrations and database updates are prohibited until the connection string is updated.
 - Current dirty worktree changes: preserved as-is and treated as pre-existing baseline.
 
+## Course Requirements Alignment & Business Rules
+
+1. Default Ticket Price: The default card/ticket price must be set to 10 and remain configurable per present; any create/update path that does not specify a present-specific price must resolve to the default value of 10.
+2. Unique Constraints: The backend must explicitly prevent duplicate present numbers or present names during both create and update operations, and the validation must be enforced in the service layer and API request handling before persisting changes.
+3. Donor Management Endpoints: Dedicated donor API operations must expose `User` records filtered by `Role = Donor`, so donor management screens and present-donor assignment flows can read and manage donor identities without creating a separate donor table or entity.
+4. Validation & Errors: Duplicate present names or numbers submitted by the client must return explicit client-error responses, using `400 Bad Request` for invalid/duplicate input and `409 Conflict` when the duplicate is rejected as a uniqueness conflict, with clear server messages for the UI to display.
+
 ## Handoff Log
 
 - 2026-09-03: Orchestration structure created. Phase 1 is ready to analyze; no application files were modified by the orchestration setup.
 - 2026-09-03: Phase 1 read-only audit completed. Backend build was not executable in the agent pass; static inspection found DTO namespace drift, missing donor sources, missing `Card` ownership, incomplete payment/lottery APIs, and model/migration drift. Implementation is blocked pending approval of the Phase 1 sub-plan and the listed model/schema proposals.
 - 2026-09-04: User conditionally approved donor-as-User roles, BaseModel-based card ownership, server-controlled development payment, and raffle/winner implementation. Revised execution order is C# DTO/model-contract verification first, Angular adaptation second; no migrations or database updates until the connection string is updated. Current source still shows `User.RoleId` commented, so that discrepancy requires verification and is not silently changed.
+
+## Final Review Checklist
+
+This is the final pre-implementation gate. Every item below must be validated before implementation is considered ready.
+
+- [ ] Runtime configuration is verified: database connection string, JWT secret/issuer/audience, CORS, frontend API base URL, environment-specific secrets, and development-payment flags are all correctly set for the target environment.
+- [ ] Authentication and authorization are fully validated: login/register flows work, JWT claims contain the correct role and user identity, protected routes are enforced on the server, and token expiry/logout behavior is handled gracefully.
+- [ ] Core business rules are enforced server-side: default ticket price resolves to 10 when not supplied, duplicate present names/numbers are blocked on create and update, donor management uses verified donor-role users, and card ownership is derived from the authenticated user rather than client input.
+- [ ] Payment flow is correct and traceable: only the authenticated owner can pay for a card, payment state transitions are explicit, the development-payment path is the only accepted local flow, and no client-provided payment flag is treated as proof of payment.
+- [ ] Lottery and winner logic has been checked against persisted data: only eligible paid cards participate, draw execution is idempotent and authorized, winner records are persisted correctly, and the frontend shows only verified backend data.
+- [ ] UX and error handling are complete: loading, empty, unauthorized, validation, duplicate, unavailable, and failure states are implemented and user-friendly; clear server messages are surfaced without silent failures.
+- [ ] Testing evidence is recorded: backend build and test suite pass, frontend build and targeted tests pass, API contract validation is complete, and the main end-to-end journey is smoke-tested.
+- [ ] Deployment readiness is confirmed: production-safe configuration is documented, secrets are not hardcoded, migration strategy is explicit, startup checks are verified, and rollout risks are documented.
+- [ ] Scope boundaries are preserved: no model or migration change is introduced without explicit approval for the exact file and schema change, and all deferred work is documented separately.
+- [ ] Sign-off evidence is attached: build output, API contract notes, QA checklist results, and final approval notes show the release meets the defined requirements.
+
+> Final approval gate: all checklist items must be checked and the supporting evidence recorded before sign-off. No implementation is considered complete without evidence, not just confidence.
+
+### Extra deep checks worth including
+- Payment idempotency and duplicate charge prevention
+- Duplicate winner prevention and draw re-run safety
+- Role mismatch handling for admin/donor/user requests
+- Clear 400/401/403/404/409/500 handling in both UI and API
+- Local environment startup documentation and secret management
+- Manual regression pass for registration → login → purchase → payment → winner flow
+
+### Final Approval Statement
+The release is approved only when every item above is either verified as complete or intentionally deferred with documented business and technical approval. No final sign-off is valid without evidence, traceability, and a clear statement of remaining risks.

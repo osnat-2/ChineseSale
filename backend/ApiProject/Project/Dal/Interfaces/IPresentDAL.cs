@@ -1,5 +1,4 @@
 ﻿using Project.Models;
-using Project.Models.ModelsDTO;
 
 namespace Project.Dal.Interfaces
 {

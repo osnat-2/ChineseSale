@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Project.BLL;
-using Project.BLL.Interfaces;
-using Project.DAL.Interfaces;
+using Project.Bll;
+using Project.Bll.Interfaces;
+using Project.Dal.Interfaces;
+using Project.Dto;
 using Project.Models;
-using Project.Models.ModelsDTO;
 
 namespace Project.Controllers
 {
     [ApiController]
-    [Route("api/auth")] // δερτϊι ΰϊ δπϊια δαριρι λΰο
+    [Route("api/auth")] // οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½οΏ½ οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½οΏ½οΏ½
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -19,16 +19,16 @@ namespace Project.Controllers
             _userService = userService;
         }
 
-        // ξωϊξω α-POST ςμ πϊια "login" εξφτδ μωμεη ΰϊ δπϊεπιν α-Body
+        // οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½-POST οΏ½οΏ½ οΏ½οΏ½οΏ½οΏ½ "login" οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½οΏ½ οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½-Body
         [HttpPost("login")]
         public async Task<Result<string>> LoginUserAsync([FromQuery] string email, [FromQuery] string password)
         {
             return await _userService.Login(email, password);
         }
 
-        // ξωϊξω α-POST ςμ πϊια "register" εξφτδ μωμεη ΰϊ δπϊεπιν α-Body
+        // οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½-POST οΏ½οΏ½ οΏ½οΏ½οΏ½οΏ½ "register" οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½οΏ½ οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½-Body
         [HttpPost("register")]
-        public async Task<Result<User>> Register([FromBody] UserDto userDto) // ωιν μα μωιξεω α-FromBody
+        public async Task<Result<User>> Register([FromBody] UserDto userDto) // οΏ½οΏ½οΏ½ οΏ½οΏ½ οΏ½οΏ½οΏ½οΏ½οΏ½οΏ½ οΏ½-FromBody
         {
             return await _userService.Register(userDto);
         }

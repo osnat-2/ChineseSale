@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Project.BLL.Interfaces;
+using Project.Bll.Interfaces;
+using Project.Dto;
 using Project.Models;
-using Project.Models.ModelsDTO;
 
 namespace Project.Controllers
 {

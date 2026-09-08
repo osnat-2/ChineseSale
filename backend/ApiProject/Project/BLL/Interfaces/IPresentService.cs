@@ -1,7 +1,7 @@
-﻿using Project.Models;
-using Project.Models.ModelsDTO;
+﻿using Project.Dto;
+using Project.Models;
 
-namespace Project.BLL.Interfaces
+namespace Project.Bll.Interfaces
 {
     public interface IPresentService
     {

@@ -8,6 +8,6 @@ argument-hint: "Analyze the current backend/frontend contract baseline."
 
 Use skill `contract-baseline`. This phase runs first and blocks feature agents until its report is approved.
 
-Analyze the compiled backend and Angular API assumptions. Inspect `Program.cs`, controllers, BLL, DAL, DTOs, profiles, models, `AppDBContext`, migrations, auth configuration, and relevant Angular services/models. Run the backend build as a diagnostic. Verify donor persistence, card ownership, payment state, JWT claims, routes, status codes, and serialization.
+Analyze the compiled backend and Angular API assumptions. Inspect `Program.cs`, controllers, Bll, DAL, DTOs, profiles, models, `AppDBContext`, migrations, auth configuration, and relevant Angular services/models. Run the backend build as a diagnostic. Verify donor persistence, card ownership, payment state, JWT claims, routes, status codes, and serialization.
 
 Before any application edit, produce and present the required gated sub-plan. During this phase, model classes and migrations are read-only. Contract repairs may be proposed, but implementation waits for approval.

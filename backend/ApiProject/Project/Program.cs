@@ -5,17 +5,17 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Project;
-using Project.BLL;
-using Project.BLL.Interfaces;
-using Project.DAL;
-using Project.DAL.Interfaces;
+using Project.Bll;
+using Project.Bll.Interfaces;
+using Project.Dal;
+using Project.Dal.Interfaces;
 using Project.Middlewares;
 using Serilog;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// двгшъ Serilog оеъаоъ айщйъ мфешои рчй
+// пїЅпїЅпїЅпїЅпїЅ Serilog пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Verbose()
     .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
@@ -26,7 +26,7 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File(
         Path.Combine(AppContext.BaseDirectory, "Logs", "log-.txt"),
         rollingInterval: RollingInterval.Day,
-        outputTemplate: "{Message:lj}{NewLine}" // оцйв шч аъ дощфи дбшеш щмк бмй щен ъесфъ отшлъ
+        outputTemplate: "{Message:lj}{NewLine}" // пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     )
     .CreateLogger();
 
@@ -77,8 +77,6 @@ builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<ICardDal, CardDal>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICategoryDal, CategoryDal>();
-builder.Services.AddScoped<IDonorService, DonorService>();
-builder.Services.AddScoped<IDonorDal, DonorDal>();
 builder.Services.AddScoped<ILotteryService, LotteryService>();
 builder.Services.AddScoped<ILotteryDal, LotteryDal>();
 builder.Services.AddScoped<IPresentService, PresentService>();
@@ -139,10 +137,10 @@ app.UseHttpsRedirection();
 // Enable CORS middleware
 app.UseCors("MyAllowSpecificOrigins");
 
-app.UseAuthentication(); // 1. чегн офтрзйн ой дощъощ
+app.UseAuthentication(); // 1. пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 app.UseAuthorization();
 
-// 2. шч аж офтймйн аъ д-Middleware щм дмевйн (лгй щйелм мгтъ ой дощъощ ема йлъеб ъойг Anonymous)
+// 2. пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ-Middleware пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ Anonymous)
 app.UseRequestLogging();
 
 app.MapControllers();

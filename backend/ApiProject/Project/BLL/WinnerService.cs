@@ -1,8 +1,8 @@
-﻿using Project.BLL.Interfaces;
-using Project.DAL.Interfaces;
+﻿using Project.Bll.Interfaces;
+using Project.Dal.Interfaces;
 using Project.Models;
 
-namespace Project.BLL
+namespace Project.Bll
 {
     public class WinnerService : IWinnerService
     {

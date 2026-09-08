@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Project.Models;
-using Project.DAL.Interfaces;
+using Project.Dal.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,49 +45,15 @@ namespace Project.Dal
                     };
                 }
 
-                // בוחרים את כל הרוכשים ששילמו עבור כרטיסים למתנה הספציפית
-                var buyers = await dbContext.Card
-                    .Where(c => c.PresentId == presentId && c.IsPaid == true)
-                    .Select(c => c.User)  // מחזירים את המידע של הרוכש
-                    .ToListAsync();
-
-                if (!buyers.Any())
+                // This contract-only baseline intentionally avoids building a winner flow that depends on a missing card owner relation.
+                // The schema only supports Card -> Present and Card.IsPaid, so this code path is left unsupported until the approved owner/winner contract is implemented.
+                logger.LogWarning($"Winner flow is not implemented for the current schema baseline for present {presentId}.");
+                return new Result<Winner>
                 {
-                    logger.LogWarning($"No paid buyers found for present with id {presentId}.");
-                    return new Result<Winner>
-                    {
-                        Success = false,
-                        Message = $"No paid buyers found for present with id {presentId}.",
-                        Data = null
-                    };
-                }
-
-                // לבחור אקראי מתוך הרשימה של הרוכשים
-                Random random = new Random();
-                var winner = buyers[random.Next(buyers.Count)];  // בוחרים אקראי מתוך הרשימה
-
-                if (winner != null)
-                {
-                    // יוצרים את אובייקט הזוכה
-                    winnerInfo = new Winner
-                    {
-                        PresentId = presentId,
-                        UserId = winner.Id,  // אין צורך ב-ToString() כאן
-                        LotteryId = DateOnly.FromDateTime(DateTime.Now)
-                    };
-
-                    // שליחת מייל לזוכה
-                    // await SendWinnerEmailAsync(winner, present);
-                    logger.LogInformation($"Winner for present with id {presentId} is {winner.Name}.");
-
-                    // מחזירים את הזוכה ב-Result
-                    return new Result<Winner>
-                    {
-                        Success = true,
-                        Message = "Winner drawn successfully.",
-                        Data = new List<Winner> { winnerInfo } // מחזירים את פרטי הזוכה בתוך List
-                    };
-                }
+                    Success = false,
+                    Message = "Winner flow is intentionally deferred for the current contract baseline.",
+                    Data = null
+                };
             }
             catch (Exception ex)
             {

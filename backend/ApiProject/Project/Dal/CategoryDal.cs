@@ -1,13 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Project.DAL.Interfaces;
+using Project.Dal.Interfaces;
 using Project.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Project.DAL
+namespace Project.Dal
 {
     public class CategoryDal : ICategoryDal
     {

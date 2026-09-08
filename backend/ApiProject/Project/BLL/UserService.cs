@@ -1,18 +1,18 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Project.BLL.Interfaces;
-using Project.DAL;
-using Project.DAL.Interfaces;
+using Project.Bll.Interfaces;
+using Project.Dal;
+using Project.Dal.Interfaces;
+using Project.Dto;
 using Project.Models;
-using Project.Models.ModelsDTO;
 using Project.Validators;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Project.BLL
+namespace Project.Bll
 {
     public class UserService : IUserService
     {
@@ -72,7 +72,7 @@ namespace Project.BLL
                 Subject = new ClaimsIdentity(new Claim[] {
                     new Claim(ClaimTypes.Name, user.Name),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role),
+                    new Claim(ClaimTypes.Role, "User"),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.MobilePhone, user.Phone ?? ""),
                     new Claim("isActive", user.IsActive.ToString().ToLower()),

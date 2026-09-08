@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
-using Project.BLL.Interfaces;
-using Project.DAL.Interfaces;
+using Project.Bll.Interfaces;
+using Project.Dal.Interfaces;
+using Project.Dto;
 using Project.Models;
-using Project.Models.ModelsDTO;
 using Project.Validators;
 
-namespace Project.BLL
+namespace Project.Bll
 {
     public class CategoryService : ICategoryService
     {

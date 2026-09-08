@@ -1,6 +1,6 @@
 ﻿using Project.Models;
 
-namespace Project.BLL.Interfaces
+namespace Project.Bll.Interfaces
 {
     public interface IWinnerService
     {

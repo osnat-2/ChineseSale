@@ -1,13 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Project.DAL.Interfaces;
+using Project.Dal.Interfaces;
 using Project.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Project.DAL
+namespace Project.Dal
 {
     // מחלקת ה-DAL עבור מתנות
     public class PresentDal : IPresentDal
@@ -70,8 +70,6 @@ namespace Project.DAL
                 // Using AsNoTracking for better performance and to avoid circular references
                 var query = dbContext.Present
                     .AsNoTracking()
-                    .Include(p => p.Donor)  // טוענים את פרטי התורם לכל מתנה
-                    .Include(p => p.Category)  // טוענים את פרטי הקטגוריה לכל מתנה
                     .AsQueryable();
 
                 if (onlyActive)
@@ -110,8 +108,6 @@ namespace Project.DAL
             try
             {
                 var present = await dbContext.Present
-                    .Include(p => p.Donor)
-                    .Include(p => p.Category)
                     .FirstOrDefaultAsync(p => p.Id == id);
 
                 if (present == null)
@@ -246,7 +242,7 @@ namespace Project.DAL
 
                 p.Name = present.Name;
                 p.DonorId = present.DonorId;
-                p.Category = present.Category;
+                p.CategoryId = present.CategoryId;
                 p.Quantity = present.Quantity;
                 p.Price = present.Price;
                 p.Description = present.Description;
@@ -427,7 +423,7 @@ namespace Project.DAL
                 // Exclude inactive presents
                 var presents = await dbContext.Present
                     .Where(p => p.IsActive)
-                    .OrderBy(p => p.Category)  // מיון לפי קטגוריה
+                    .OrderBy(p => p.CategoryId)  // sort by the persisted category reference
                     .Include(p => p.Donor)  // כולל את המידע על התורם
                     .ToListAsync();
 
