@@ -9,6 +9,7 @@ namespace Project.Controllers
 {
     [ApiController]
     [Route("api/card/[controller]/")]
+    [Authorize]
     public class CardController : ControllerBase
     {
         ICardService _cardService;

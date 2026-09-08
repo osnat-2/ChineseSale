@@ -181,7 +181,7 @@ namespace Project.Dal
             try
             {
                 // מחפשים את המתנה לפי ה-ID שלה
-                var present = await dbContext.Present.FindAsync(presentId);
+                var present = await dbContext.Present.FirstOrDefaultAsync(p => p.Id == presentId);
                 if (present == null)
                 {
                     // אם לא נמצאה מתנה עם ה-ID הזה, נרשום אזהרה בלוג
@@ -194,8 +194,11 @@ namespace Project.Dal
                     };
                 }
 
-                // Soft Delete: Set IsActive to false instead of removing the record
+                // Soft delete: retain the record for audit/history while excluding it from normal queries.
                 present.IsActive = false;
+                present.IsDeleted = true;
+                present.DeletedAt = DateTime.UtcNow;
+                present.UpdatedAt = DateTime.UtcNow;
                 dbContext.Present.Update(present);
                 await dbContext.SaveChangesAsync();  // שומרים את השינויים במסד הנתונים
 

@@ -13,24 +13,23 @@ import { PresentManagement } from './components/management/present-management/pr
 import { CardManagement } from './components/management/card-management/card-management';
 import { WinnerManagement } from './components/management/winner-management/winner-management';
 import { PurchasesManagement } from './components/management/purchases-management/purchases-management';
-// import { AdminGuard } from './guards/admin.guard';
-// import { AuthGuard } from './guards/auth.guard';
+import { AdminGuard } from './guards/admin.guard';
+import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  // { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: Home },
-  // { path: 'present', component: Present, canActivate: [AdminGuard] },
-  // { path: 'donor', component: Donor, canActivate: [AdminGuard] },
-  // { path: 'card', component: Card, canActivate: [AuthGuard] },
-  // { path: 'payment', component: Payment, canActivate: [AuthGuard] },
-  // { path: 'winner', component: Winner, canActivate: [AdminGuard] },
-  // { path: 'admin', component: Admin, canActivate: [AdminGuard] },
-  // { path: 'admin/donors', component: DonorManagement, canActivate: [AdminGuard] },
-  // { path: 'admin/presents', component: PresentManagement, canActivate: [AdminGuard] },
-  // { path: 'admin/cards', component: CardManagement, canActivate: [AdminGuard] },
-  // { path: 'admin/winners', component: WinnerManagement, canActivate: [AdminGuard] },
-  // { path: 'admin/purchases', component: PurchasesManagement, canActivate: [AdminGuard] },
-  { path: '', component: Login },
+  { path: 'present', component: Present, canActivate: [AdminGuard] },
+  { path: 'donor', component: Donor, canActivate: [AdminGuard] },
+  { path: 'card', component: Card, canActivate: [AuthGuard] },
+  { path: 'payment', component: Payment, canActivate: [AuthGuard] },
+  { path: 'winner', component: Winner, canActivate: [AdminGuard] },
+  { path: 'admin', component: Admin, canActivate: [AdminGuard] },
+  { path: 'admin/donors', component: DonorManagement, canActivate: [AdminGuard] },
+  { path: 'admin/presents', component: PresentManagement, canActivate: [AdminGuard] },
+  { path: 'admin/cards', component: CardManagement, canActivate: [AdminGuard] },
+  { path: 'admin/winners', component: WinnerManagement, canActivate: [AdminGuard] },
+  { path: 'admin/purchases', component: PurchasesManagement, canActivate: [AdminGuard] },
+  { path: 'login', component: Login },
   { path: 'register', component: Register }
 ];
-

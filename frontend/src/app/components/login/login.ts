@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { UserService } from '../../services/userService/user-service';
 import { HttpService } from '../../services/httpService/http-service';
+import { AuthService } from '../../services/authService/auth-service';
 
 @Component({
   selector: 'app-login',
@@ -16,6 +17,7 @@ export class Login implements OnInit {
   userService: UserService = inject(UserService);
   router: Router = inject(Router);
   fb: FormBuilder = inject(FormBuilder);
+  authService: AuthService = inject(AuthService);
 
   loginForm!: FormGroup;
   errorMessage: string = '';
@@ -45,9 +47,13 @@ export class Login implements OnInit {
     this.userService.login(email, password).subscribe({
       next: (response) => {
         this.isLoading = false;
-        this.httpService.router.navigate(['/home']);
-        if (response?.isSuccess === false) {
+        if (response?.success !== true || typeof response?.message !== 'string') {
           this.errorMessage = response?.message || 'Login failed.';
+          return;
+        }
+        this.authService.setToken(response.message);
+        if (!this.authService.isAuthenticated()) {
+          this.errorMessage = 'Login returned an invalid or expired token.';
           return;
         }
         this.router.navigate(['/home']);

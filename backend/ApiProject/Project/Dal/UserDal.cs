@@ -32,7 +32,8 @@ namespace Project.Dal
             logger.LogInformation("GetUserByEmail function");
             try
             {
-                return await dbContext.User.FirstOrDefaultAsync(u => u.Email == email);
+                return await dbContext.User.Include(u => u.Role)
+                    .FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
             }
 
             catch
@@ -40,6 +41,11 @@ namespace Project.Dal
                 logger.LogError("could not find check duplicate email");
                 return null;
             }
+        }
+
+        public async Task<Role?> GetRoleByName(string name)
+        {
+            return await dbContext.Role.FirstOrDefaultAsync(role => role.Name == name && role.IsActive);
         }
 
         public async Task<Result<User>> Register(User user)

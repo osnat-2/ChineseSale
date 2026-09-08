@@ -21,6 +21,7 @@ namespace Project.Controllers
 
         // ����� �-POST �� ���� "login" ����� ����� �� ������� �-Body
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<Result<string>> LoginUserAsync([FromQuery] string email, [FromQuery] string password)
         {
             return await _userService.Login(email, password);
@@ -28,9 +29,24 @@ namespace Project.Controllers
 
         // ����� �-POST �� ���� "register" ����� ����� �� ������� �-Body
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<Result<User>> Register([FromBody] UserDto userDto) // ��� �� ������ �-FromBody
         {
             return await _userService.Register(userDto);
+        }
+
+        [HttpPost("addDonor")]
+        [Authorize(Roles = "Admin")]
+        public async Task<Result<User>> AddDonor([FromBody] UserDto userDto) //  -FromBody
+        {
+            return await _userService.AddDonor(userDto);
+        }
+
+        [HttpPost("addAdmin")]
+        [Authorize(Roles = "Admin")]
+        public async Task<Result<User>> AddAdmin([FromBody] UserDto userDto) //  -FromBody
+        {
+            return await _userService.AddAdmin(userDto);
         }
     }
 }

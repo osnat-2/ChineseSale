@@ -19,7 +19,7 @@ Build a complete Chinese sale web application with the existing ASP.NET Core API
 | Phase | Agent | Status | Approval |
 |---|---|---|---|
 | 1. Contract Baseline | `contract-baseline` | Completed: backend contract-only fix validated; build succeeded with warnings | Approved |
-| 2. Auth | `auth` | Blocked by Phase 1 | Pending |
+| 2. Auth | `auth` | Implemented: JWT state, interceptor, guards, active endpoint authorization; donor/admin role persistence deferred | Approved |
 | 3. Catalog | `catalog` | Blocked by Phase 1 | Pending |
 | 4. Purchase/Payment | `purchase-payment` | Blocked by Phases 1-2 | Pending |
 | 5. Admin | `admin` | Blocked by Phases 1-2 | Pending |
@@ -128,7 +128,48 @@ The approved next execution is a contract-only backend pass in this order:
 
 ## Phase 2: Auth
 
-Implement verified JWT state, interceptor, logout/expiry handling, auth guard, admin guard, and focused tests. Align claims and roles with Phase 1 findings.
+### Implementation Result
+
+Completed on 2026-09-08 after explicit approval of the Auth sub-plan.
+
+- Added browser-safe Angular JWT state in `frontend/src/app/services/authService/auth-service.ts`, including token validation, expiry handling, role extraction, and logout.
+- Added functional JWT interceptor in `frontend/src/app/interceptors/auth-interceptor.ts`; login/register requests are excluded, authenticated API requests receive the Bearer header, and 401 responses clear state and navigate to login.
+- Added functional `AuthGuard` and `AdminGuard` and activated the existing protected Angular routes.
+- Corrected login handling to consume the verified backend `Result<string>` contract (`success` plus JWT in `message`).
+- Registered the interceptor in `app.config.ts` and added focused AuthService tests.
+- Added explicit `[AllowAnonymous]` to login/register and `[Authorize]` to the active card controller endpoint surface.
+
+### Validation
+
+- Backend: `dotnet build Project.sln --no-restore` from `backend/ApiProject`; succeeded with 111 existing warnings and 0 errors.
+- Angular build: blocked because frontend dependencies are not installed; `@angular/build:application` is unavailable.
+- Static diagnostics: no errors reported in the new AuthService, interceptor, guards, routes, UserService, or Login source files; app config dependency diagnostics are caused by missing `node_modules`.
+
+### Residual Risks and Explicit Deferrals
+
+- The unchanged `User` model has role properties commented out, and no active donor/admin creation endpoint exists. Therefore server-side assignment of persisted `Donor` and `Admin` roles cannot be completed without an explicit model/schema approval. Public registration remains non-elevating and JWT issuance currently uses the fixed `User` role claim.
+- Backend authentication middleware already validates issuer, audience, signature, and lifetime with zero clock skew; invalid or expired bearer tokens are rejected by the framework with 401, while role mismatches return 403.
+- No model files or EF migrations were changed.
+
+## Model-Aligned Backend Update: RoleId and IsDeleted
+
+Completed on 2026-09-08 after explicit approval.
+
+- Added `User.Role` persistence configuration and a `Role` DbSet; public registration resolves the server-side `User` role, while admin donor/admin endpoints resolve `Donor` and `Admin` roles through dedicated service methods.
+- JWT role claims now use the persisted role name, and inactive users cannot be returned by the login lookup.
+- Removed client-facing `RoleId` from `UserDto`; AutoMapper ignores role, deletion, timestamps, IDs, and audit fields.
+- Added EF query filters for all `BaseModel` entities so normal DAL queries exclude `IsDeleted` records.
+- Present and category deletion now sets `IsDeleted`, `IsActive`, `DeletedAt`, and `UpdatedAt` instead of only changing `IsActive`.
+- Added server-managed field protections to category, present, card, lottery, and winner profiles.
+
+Validation:
+
+- `dotnet build Project.sln --no-restore` from `backend/ApiProject`: succeeded with 0 errors and 114 warnings.
+- No database migration or database update command was run.
+
+Migration notice:
+
+- The model contract now requires the database schema to contain `User.RoleId`, `BaseModel.IsDeleted`, `BaseModel.DeletedAt`, and the configured `User.RoleId -> Role` relationship. The existing migration set must be reviewed and a separate migration/database-update pass is required if those columns, table, or relationship are not already present.
 
 ## Phase 3: Catalog
 

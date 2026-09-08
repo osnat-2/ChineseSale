@@ -72,7 +72,7 @@ namespace Project.Dal
                     };
                 }
 
-                var category = await dbContext.Category.FindAsync(id);
+                var category = await dbContext.Category.FirstOrDefaultAsync(c => c.Id == id);
 
                 if (category == null)
                 {
@@ -309,8 +309,11 @@ namespace Project.Dal
                     };
                 }
 
-                // Soft delete: mark as inactive instead of hard delete
+                // Soft delete: retain the record for audit/history while excluding it from normal queries.
                 category.IsActive = false;
+                category.IsDeleted = true;
+                category.DeletedAt = DateTime.UtcNow;
+                category.UpdatedAt = DateTime.UtcNow;
                 dbContext.Category.Update(category);
                 await dbContext.SaveChangesAsync();
 
