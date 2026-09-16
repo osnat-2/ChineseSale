@@ -20,7 +20,7 @@ Build a complete Chinese sale web application with the existing ASP.NET Core API
 |---|---|---|---|
 | 1. Contract Baseline | `contract-baseline` | Completed: backend contract-only fix validated; build succeeded with warnings | Approved |
 | 2. Auth | `auth` | Implemented: JWT state, interceptor, guards, active endpoint authorization; donor/admin role persistence deferred | Approved |
-| 3. Catalog | `catalog` | Blocked by Phase 1 | Pending |
+| 3. Catalog | `catalog` | Implemented: public read-only catalogue, typed services, filters, details, and focused tests | Approved |
 | 4. Purchase/Payment | `purchase-payment` | Blocked by Phases 1-2 | Pending |
 | 5. Admin | `admin` | Blocked by Phases 1-2 | Pending |
 | 6. Lottery | `lottery` | Blocked by Phases 1-2-4 | Pending |
@@ -173,7 +173,36 @@ Migration notice:
 
 ## Phase 3: Catalog
 
-Implement public present/category routes and typed services, search/filtering, details, and loading/empty/error states using verified read endpoints.
+Backend read contract enhancement completed on 2026-09-08 after explicit approval. `GET /api/present/getAllPresents` now accepts optional `search`, `categoryId`, `sortBy` (`name` or `price`), and `sortDirection` (`asc` or `desc`) query parameters. The DAL applies server-side name/description search, category filtering, deterministic sorting, and strict `IsActive == true && IsDeleted == false` filtering. `GET /api/present/{id}` applies the same active/non-deleted constraint. Existing `onlyActive` query compatibility and `Result<Present>` response shape were preserved. No model or migration files were changed.
+
+Validation: `dotnet build Project.sln --no-restore` from `backend/ApiProject` succeeded with 0 errors and 114 existing warnings. Angular catalogue implementation remains pending.
+
+Next: implement public present/category routes and typed Angular services, search/filtering UI, details, and loading/empty/error states against this verified read contract.
+
+### Phase 3 Implementation Result
+
+Completed on 2026-09-08 after explicit approval of the Phase 3 catalogue scope.
+
+- Added typed `Result<T>`, present, and category models aligned to the verified `data` array wrapper.
+- Added read-only `PresentService` methods for active catalogue queries and present detail lookup, including the verified search, category, sort, and direction parameters.
+- Added read-only `CategoryService.getAllCategories()` against anonymous `GET /api/category`.
+- Added public `/catalog` and `/catalog/:id` routes while preserving the guarded admin `/present` route.
+- Added catalogue list and detail components with loading, empty, error, invalid-id, responsive, accessible labels, and image fallback states.
+- Added the fallback asset to Angular's build assets and added focused service/component specs.
+- Corrected the stale generated `DonatorService` test import so the Angular test target can compile; no donor application behavior changed.
+
+### Phase 3 Validation
+
+- Angular diagnostics: no errors in the Phase 3 models, services, routes, or components.
+- `npm run build` from `frontend`: passed; existing unused-import and initial bundle-budget warnings remain.
+- Focused catalogue tests: `npx ng test --watch=false --browsers=ChromeHeadless --include='src/app/services/presentService/present-service.spec.ts' --include='src/app/services/categoryService/category-service.spec.ts' --include='src/app/components/catalog/catalog.spec.ts' --include='src/app/components/catalog-detail/catalog-detail.spec.ts'`: 8 passed.
+- Full Angular test target executes but currently reports 11 unrelated/pre-existing failures in generated service specs without `provideHttpClient()` and the stale app title assertion. The Phase 3 specs pass independently.
+
+### Phase 3 Residual Risks
+
+- The frontend API base URL remains hardcoded to `https://localhost:7142/api/`; environment-specific configuration is deferred to deployment/runtime configuration work.
+- The category endpoint's HTTP failure is intentionally non-blocking for catalogue rendering, so a category-load failure falls back to the all-category selector without an inline category error.
+- Existing Angular suite failures outside catalogue remain and should be repaired during the broader verification phase.
 
 ## Phase 4: Purchase/Payment
 

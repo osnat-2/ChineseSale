@@ -62,22 +62,42 @@ namespace Project.Dal
         }
 
         // צפייה ברשימת המתנות
-        public async Task<Result<Present>> GetAllPresentsAsync(bool onlyActive = true)
+        public async Task<Result<Present>> GetAllPresentsAsync(
+            bool onlyActive = true,
+            string? search = null,
+            int? categoryId = null,
+            string? sortBy = null,
+            string? sortDirection = null)
         {
             try
             {
-                // מבצעים חיפוש על טבלת המתנות, כולל המידע על התורם וקטגוריה (באמצעות Include)
-                // Using AsNoTracking for better performance and to avoid circular references
                 var query = dbContext.Present
                     .AsNoTracking()
+                    .Where(p => p.IsActive && !p.IsDeleted)
                     .AsQueryable();
 
-                if (onlyActive)
+                if (!string.IsNullOrWhiteSpace(search))
                 {
-                    query = query.Where(p => p.IsActive);
+                    var searchPattern = $"%{search.Trim()}%";
+                    query = query.Where(p =>
+                        EF.Functions.Like(p.Name, searchPattern) ||
+                        (p.Description != null && EF.Functions.Like(p.Description, searchPattern)));
                 }
 
-                var presents = await query.ToListAsync();  // מבצעים את החיפוש בצורה אסינכרונית
+                if (categoryId.HasValue)
+                {
+                    query = query.Where(p => p.CategoryId == categoryId.Value);
+                }
+
+                query = sortBy switch
+                {
+                    "price" when sortDirection == "desc" => query.OrderByDescending(p => p.Price).ThenBy(p => p.Name),
+                    "price" => query.OrderBy(p => p.Price).ThenBy(p => p.Name),
+                    "name" when sortDirection == "desc" => query.OrderByDescending(p => p.Name),
+                    _ => query.OrderBy(p => p.Name)
+                };
+
+                var presents = await query.ToListAsync();
 
                 // תיעוד בלוג שהפונקציה הצליחה
                 logger.LogInformation("Fetched all presents successfully.");
@@ -86,7 +106,7 @@ namespace Project.Dal
                 {
                     Success = true,
                     Message = "Fetched all presents successfully.",
-                    Data = presents  // מחזירים את כל המתנות שנמצאו
+                    Data = presents
                 };
             }
             catch (Exception ex)
@@ -108,7 +128,7 @@ namespace Project.Dal
             try
             {
                 var present = await dbContext.Present
-                    .FirstOrDefaultAsync(p => p.Id == id);
+                    .FirstOrDefaultAsync(p => p.Id == id && p.IsActive && !p.IsDeleted);
 
                 if (present == null)
                 {

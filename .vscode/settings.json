@@ -9,6 +9,11 @@
             "matchCommandLine": true
         },
         "git push": true,
-        "git remote": true
+        "git remote": true,
+        "/^Push-Location frontend; npm install; Pop-Location$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "git merge": true
     }
 }

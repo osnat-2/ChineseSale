@@ -1,0 +1,16 @@
+<main class="detail-page">
+  <a routerLink="/catalog" class="back-link">Back to catalogue</a>
+  <p *ngIf="loading" class="state" role="status">Loading present...</p>
+  <p *ngIf="!loading && errorMessage" class="state state-error" role="alert">{{ errorMessage }}</p>
+
+  <article *ngIf="!loading && present" class="detail-layout">
+    <img [src]="present.imageUrl || 'assets/images/present-placeholder.svg'" [alt]="present.name" (error)="imageFallback($event)" />
+    <div>
+      <p class="eyebrow">Featured present</p>
+      <h1>{{ present.name }}</h1>
+      <p class="description">{{ present.description }}</p>
+      <p class="price">{{ present.price | currency }}</p>
+      <p class="availability">{{ present.quantity }} available</p>
+    </div>
+  </article>
+</main>

@@ -1,4 +1,14 @@
-export class presentModel {
+export interface presentModel {
+  id: number;
+  name: string;
+  donorId: number;
+  categoryId: number;
+  quantity: number;
+  price: number;
+  description: string;
+  imageUrl: string;
+  isActive: boolean;
+}export class presentModel {
     id!: number;
     name!: string;
     donorId!: number;

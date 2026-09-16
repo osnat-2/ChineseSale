@@ -56,9 +56,53 @@ namespace Project.Bll
             return await _presentDal.AddPresentAsync(present);
         }
 
-        public async Task<Result<Present>> GetAllPresentsAsync(bool onlyActive = true)
+        public async Task<Result<Present>> GetAllPresentsAsync(
+            bool onlyActive = true,
+            string? search = null,
+            int? categoryId = null,
+            string? sortBy = null,
+            string? sortDirection = null)
         {
-            return await _presentDal.GetAllPresentsAsync(onlyActive);
+            if (categoryId <= 0)
+            {
+                return new Result<Present>
+                {
+                    Success = false,
+                    Message = "Category ID must be greater than zero.",
+                    Data = Enumerable.Empty<Present>()
+                };
+            }
+
+            var normalizedSortBy = string.IsNullOrWhiteSpace(sortBy) ? null : sortBy.Trim().ToLowerInvariant();
+            if (normalizedSortBy is not null && normalizedSortBy is not ("name" or "price"))
+            {
+                return new Result<Present>
+                {
+                    Success = false,
+                    Message = "Sort by must be either 'name' or 'price'.",
+                    Data = Enumerable.Empty<Present>()
+                };
+            }
+
+            var normalizedSortDirection = string.IsNullOrWhiteSpace(sortDirection)
+                ? "asc"
+                : sortDirection.Trim().ToLowerInvariant();
+            if (normalizedSortDirection is not ("asc" or "desc"))
+            {
+                return new Result<Present>
+                {
+                    Success = false,
+                    Message = "Sort direction must be either 'asc' or 'desc'.",
+                    Data = Enumerable.Empty<Present>()
+                };
+            }
+
+            return await _presentDal.GetAllPresentsAsync(
+                onlyActive,
+                string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+                categoryId,
+                normalizedSortBy,
+                normalizedSortDirection);
         }
 
         public async Task<Result<Present>> GetPresentByIdAsync(int id)

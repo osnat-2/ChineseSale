@@ -1,0 +1,22 @@
+.catalog-page { max-width: 1180px; margin: 0 auto; padding: 3rem 1.25rem 5rem; color: #17232b; }
+.catalog-header { border-left: 5px solid #e06b3c; padding-left: 1rem; margin-bottom: 2rem; }
+.eyebrow, .card-label { color: #b24722; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: .75rem; }
+h1 { max-width: 650px; margin: 0; font: 700 clamp(2.25rem, 6vw, 4.8rem)/.98 Georgia, serif; }
+.intro { color: #53626a; font-size: 1.1rem; }
+.filters { display: grid; grid-template-columns: 2fr repeat(3, 1fr) auto; gap: .75rem; align-items: end; padding: 1rem; background: #f1eee7; border: 1px solid #d9d3c8; }
+label { display: grid; gap: .35rem; font-weight: 700; font-size: .85rem; }
+input, select, button { min-height: 2.75rem; border: 1px solid #aeb8b5; padding: .55rem .7rem; background: #fff; font: inherit; }
+button { background: #17232b; color: #fff; cursor: pointer; font-weight: 700; }
+.state { padding: 3rem 1rem; text-align: center; color: #53626a; }
+.state-error { color: #a52e2e; }
+.present-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-top: 2rem; }
+.present-card { background: #fff; border: 1px solid #d9d3c8; box-shadow: 0 8px 24px #17232b12; }
+.present-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #e8e3d9; }
+.present-card-body { padding: 1.1rem; }
+.present-card h2 { margin: .35rem 0; font: 700 1.45rem Georgia, serif; }
+.present-card p { color: #53626a; }
+.card-footer { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-top: 1.2rem; }
+.card-footer strong { color: #b24722; }
+.card-footer a { color: #17232b; font-weight: 700; }
+@media (max-width: 800px) { .filters { grid-template-columns: 1fr 1fr; } .filters button { grid-column: 1 / -1; } }
+@media (max-width: 480px) { .filters { grid-template-columns: 1fr; } }

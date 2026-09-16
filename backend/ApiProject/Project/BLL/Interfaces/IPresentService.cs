@@ -5,7 +5,7 @@ namespace Project.Bll.Interfaces
 {
     public interface IPresentService
     {
-        Task<Result<Present>> GetAllPresentsAsync(bool onlyActive = true);
+        Task<Result<Present>> GetAllPresentsAsync(bool onlyActive = true, string? search = null, int? categoryId = null, string? sortBy = null, string? sortDirection = null);
         Task<Result<Present>> GetPresentByIdAsync(int id);
         Task<Result<Present>> AddPresentAsync(PresentDto presentDto);
         Task<Result<Present>> DeletePresentAsync(int presentId);

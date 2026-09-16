@@ -15,10 +15,14 @@ import { WinnerManagement } from './components/management/winner-management/winn
 import { PurchasesManagement } from './components/management/purchases-management/purchases-management';
 import { AdminGuard } from './guards/admin.guard';
 import { AuthGuard } from './guards/auth.guard';
+import { Catalog } from './components/catalog/catalog';
+import { CatalogDetail } from './components/catalog-detail/catalog-detail';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: Home },
+  { path: 'catalog', component: Catalog },
+  { path: 'catalog/:id', component: CatalogDetail },
   { path: 'present', component: Present, canActivate: [AdminGuard] },
   { path: 'donor', component: Donor, canActivate: [AdminGuard] },
   { path: 'card', component: Card, canActivate: [AuthGuard] },

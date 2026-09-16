@@ -4,7 +4,7 @@ namespace Project.Dal.Interfaces
 {
     public interface IPresentDal
     {
-        Task<Result<Present>> GetAllPresentsAsync(bool onlyActive = true);
+        Task<Result<Present>> GetAllPresentsAsync(bool onlyActive = true, string? search = null, int? categoryId = null, string? sortBy = null, string? sortDirection = null);
         Task<Result<Present>> GetPresentByIdAsync(int id);
         Task<Result<Present>> AddPresentAsync(Present present);
         Task<Result<Present>> DeletePresentAsync(int presentId);
