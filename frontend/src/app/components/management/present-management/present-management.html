@@ -1,1 +1,19 @@
-<p>present-management works!</p>
+<section class="management-page">
+  <header>
+    <p class="eyebrow">{{ 'management.presentEyebrow' | translate }}</p>
+    <h1>{{ 'management.presentTitle' | translate }}</h1>
+  </header>
+
+  <div *ngIf="presents.length === 0" class="empty-state">
+    {{ 'management.presentEmpty' | translate }}
+  </div>
+
+  <div *ngIf="presents.length > 0" class="cards">
+    <article *ngFor="let present of presents" class="info-card">
+      <h2>{{ present.name }}</h2>
+      <p><strong>{{ 'management.category' | translate }}:</strong> {{ present.category }}</p>
+      <p><strong>{{ 'management.price' | translate }}:</strong> {{ present.price | localizedCurrency:'ILS' }}</p>
+      <p><strong>{{ 'management.status' | translate }}:</strong> {{ (present.active ? 'management.active' : 'management.inactive') | translate }}</p>
+    </article>
+  </div>
+</section>

@@ -1,1 +1,27 @@
-<p>winner-management works!</p>
+<section class="management-page">
+  <header>
+    <p class="eyebrow">{{ 'management.winnerEyebrow' | translate }}</p>
+    <h1>{{ 'management.winnerTitle' | translate }}</h1>
+  </header>
+
+  <div *ngIf="!latestWinner" class="empty-state">
+    {{ 'management.winnerEmpty' | translate }}
+  </div>
+
+  <table *ngIf="latestWinner">
+    <thead>
+      <tr>
+        <th>{{ 'management.present' | translate }}</th>
+        <th>{{ 'management.card' | translate }}</th>
+        <th>{{ 'management.lottery' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>#{{ latestWinner.presentId }}</td>
+        <td>#{{ latestWinner.cardId }}</td>
+        <td>#{{ latestWinner.lotteryId }}</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

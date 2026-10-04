@@ -17,6 +17,7 @@ import { AdminGuard } from './guards/admin.guard';
 import { AuthGuard } from './guards/auth.guard';
 import { Catalog } from './components/catalog/catalog';
 import { CatalogDetail } from './components/catalog-detail/catalog-detail';
+import { PersonalArea } from './components/personal-area/personal-area';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -27,6 +28,7 @@ export const routes: Routes = [
   { path: 'donor', component: Donor, canActivate: [AdminGuard] },
   { path: 'card', component: Card, canActivate: [AuthGuard] },
   { path: 'payment', component: Payment, canActivate: [AuthGuard] },
+  { path: 'personal-area', component: PersonalArea, canActivate: [AuthGuard] },
   { path: 'winner', component: Winner, canActivate: [AdminGuard] },
   { path: 'admin', component: Admin, canActivate: [AdminGuard] },
   { path: 'admin/donors', component: DonorManagement, canActivate: [AdminGuard] },

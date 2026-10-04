@@ -3,6 +3,7 @@ import { of, throwError } from 'rxjs';
 import { Catalog } from './catalog';
 import { PresentService } from '../../services/presentService/present-service';
 import { CategoryService } from '../../services/categoryService/category-service';
+import { LanguageService } from '../../i18n/language.service';
 
 describe('Catalog', () => {
   let component: Catalog;
@@ -11,6 +12,7 @@ describe('Catalog', () => {
   const categoryService = { getAllCategories: jasmine.createSpy().and.returnValue(of({ success: true, data: [] })) };
 
   beforeEach(async () => {
+    window.localStorage.setItem('chinese-sale-language', 'en');
     presentService.getAllPresents.and.returnValue(of({ success: true, data: [] }));
     categoryService.getAllCategories.and.returnValue(of({ success: true, data: [] }));
     await TestBed.configureTestingModule({
@@ -25,6 +27,8 @@ describe('Catalog', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => window.localStorage.removeItem('chinese-sale-language'));
+
   it('shows the empty state when the API returns no active presents', () => {
     expect(component.presents).toEqual([]);
     expect(fixture.nativeElement.textContent).toContain('No presents match these filters.');
@@ -35,5 +39,9 @@ describe('Catalog', () => {
     component.loadPresents();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Unable to load the catalogue.');
+
+    TestBed.inject(LanguageService).setLanguage('he');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('לא ניתן לטעון את הקטלוג. נסו שוב.');
   });
 });

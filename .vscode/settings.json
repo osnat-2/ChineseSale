@@ -14,6 +14,10 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "git merge": true
+        "git merge": true,
+        "/^git pull --ff-only$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

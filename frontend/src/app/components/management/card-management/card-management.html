@@ -1,1 +1,27 @@
-<p>card-management works!</p>
+<section class="management-page">
+  <header>
+    <p class="eyebrow">{{ 'management.cardEyebrow' | translate }}</p>
+    <h1>{{ 'management.cardTitle' | translate }}</h1>
+  </header>
+
+  <div *ngIf="cards.length === 0" class="empty-state">
+    {{ 'management.cardEmpty' | translate }}
+  </div>
+
+  <table *ngIf="cards.length > 0">
+    <thead>
+      <tr>
+        <th>{{ 'management.user' | translate }}</th>
+        <th>{{ 'management.present' | translate }}</th>
+        <th>{{ 'management.payment' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let card of cards">
+        <td>{{ card.user }}</td>
+        <td>{{ card.present }}</td>
+        <td>{{ (card.paid ? 'management.paid' : 'management.unpaid') | translate }}</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

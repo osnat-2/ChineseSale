@@ -8,14 +8,14 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const token = authService.getToken();
-  const isAuthRequest = request.url.includes('/auth/login') || request.url.includes('/auth/register');
-  const authorizedRequest = token && !isAuthRequest
+  const isCardPaymentRequest = /\/api\/card(?:\/|$)/i.test(request.url);
+  const authorizedRequest = token && isCardPaymentRequest
     ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
     : request;
 
   return next(authorizedRequest).pipe(
     catchError((error) => {
-      if (error.status === 401 && !isAuthRequest) {
+      if (error.status === 401 && isCardPaymentRequest) {
         authService.clearToken();
         void router.navigate(['/login']);
       }

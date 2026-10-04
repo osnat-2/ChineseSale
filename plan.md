@@ -21,10 +21,10 @@ Build a complete Chinese sale web application with the existing ASP.NET Core API
 | 1. Contract Baseline | `contract-baseline` | Completed: backend contract-only fix validated; build succeeded with warnings | Approved |
 | 2. Auth | `auth` | Implemented: JWT state, interceptor, guards, active endpoint authorization; donor/admin role persistence deferred | Approved |
 | 3. Catalog | `catalog` | Implemented: public read-only catalogue, typed services, filters, details, and focused tests | Approved |
-| 4. Purchase/Payment | `purchase-payment` | Blocked by Phases 1-2 | Pending |
-| 5. Admin | `admin` | Blocked by Phases 1-2 | Pending |
-| 6. Lottery | `lottery` | Blocked by Phases 1-2-4 | Pending |
-| 7. Verification | Main workflow | Not started | Pending |
+| 4. Purchase/Payment | `purchase-payment` | Implemented: server-owned card lifecycle, owner history, development payment, guarded personal area, and focused UI tests | Approved |
+| 5. Admin | `admin` | Implemented: admin dashboard shell and management placeholders with empty-state handling; backend-owned data remains deferred to verified API calls | Approved |
+| 6. Lottery | `lottery` | Implemented: server-side draw validation, no-paid-card friendly failure, and atomic winner+lottery completion persistence | Approved |
+| 7. Verification | Main workflow | Completed with documented residual risks | Approved |
 
 ## Execution Contract
 
@@ -174,8 +174,47 @@ Migration notice:
 ## Phase 3: Catalog
 
 Backend read contract enhancement completed on 2026-09-08 after explicit approval. `GET /api/present/getAllPresents` now accepts optional `search`, `categoryId`, `sortBy` (`name` or `price`), and `sortDirection` (`asc` or `desc`) query parameters. The DAL applies server-side name/description search, category filtering, deterministic sorting, and strict `IsActive == true && IsDeleted == false` filtering. `GET /api/present/{id}` applies the same active/non-deleted constraint. Existing `onlyActive` query compatibility and `Result<Present>` response shape were preserved. No model or migration files were changed.
+## Phase 6: Lottery
 
+### Implementation Result
+
+Completed on 2026-09-16 after explicit approval of the Phase 6 sub-plan and the additional validation constraints.
+
+- Implemented the winner draw flow in the server DAL, service, and controllers using the existing `Card`, `Present`, and `Lottery` model contract without creating a migration or model change.
+- Added a friendly validation error when a present has zero eligible paid cards, returning a non-500 result message: "No paid cards are available for this present, so a draw cannot be completed."
+- Ensured the winner record creation and `Lottery.IsMadeOut` completion update are persisted together in the same database transaction. For relational databases, the update is wrapped in `BeginTransactionAsync`, with a test-safe fallback for the in-memory provider.
+- Exposed `POST /api/lottery/draw/{presentId}` and `POST /api/winner/draw/{presentId}` endpoints using the verified `Result<Winner>` contract.
+- Added a focused backend regression test project for draw validation and transaction behavior.
+
+### Validation
+
+- `cd "d:\Student\מסלול\Projects\ChineseSale\backend\ApiProject"; dotnet test Project.Tests/Project.Tests.csproj --nologo --verbosity minimal`
+- Result: project compiled and the focused tests were executed successfully after aligning the test project to the installed .NET 8 runtime. The initial attempt failed only because the test project targeted .NET 9 while the machine had no .NET 9 runtime installed.
+
+### Residual Risks
+
+- The draw logic currently selects one winner by random choice from the eligible paid cards and should remain a server-authoritative operation; no separate winner notification system has been added yet.
+- No migration or model schema changes were made, so the current design remains within the approved persisted contract.
 Validation: `dotnet build Project.sln --no-restore` from `backend/ApiProject` succeeded with 0 errors and 114 existing warnings. Angular catalogue implementation remains pending.
+
+### Angular Implementation Result
+
+Completed on 2026-09-16 after explicit approval of the Angular Phase 6 sub-plan.
+
+- Added typed Angular lottery and winner models aligned with the verified `Result<Winner>` draw response.
+- Added `LotteryService.drawWinner` and `WinnerService.drawWinner` for the verified draw endpoints.
+- Implemented the admin winner draw screen with active-present loading, server-authoritative draw execution, disabled in-flight/duplicate controls, and clear no-paid-card/already-drawn error messages.
+- Successful draws immediately update shared local winner state and mark the present as completed for the current session.
+- Updated winner management to display the latest persisted draw result available in the current session and explicitly report that the current backend has no historical winner-list endpoint.
+- Added focused service and management component tests.
+
+Validation:
+
+- Focused Angular tests: `npx ng test --watch=false --browsers=ChromeHeadless --include='src/app/services/lotteryService/lottery-service.spec.ts' --include='src/app/services/winnerService/winner-service.spec.ts' --include='src/app/components/management/winner-management/winner-management.spec.ts'`: 5 passed.
+- Angular build: `npm run build` from `frontend`: passed; existing unused-import and bundle-budget warnings remain.
+- Static diagnostics: no errors in changed lottery, winner, service, or component TypeScript files.
+
+Residual risk: winner management cannot display historical winners across page reloads because the verified backend exposes draw execution only and has no winner-list endpoint. No backend models, migrations, or API contracts were changed in this UI phase.
 
 Next: implement public present/category routes and typed Angular services, search/filtering UI, details, and loading/empty/error states against this verified read contract.
 
@@ -206,11 +245,68 @@ Completed on 2026-09-08 after explicit approval of the Phase 3 catalogue scope.
 
 ## Phase 4: Purchase/Payment
 
-Implement the supported card lifecycle, ownership/availability checks, checkout, personal area, and a server-controlled development payment flow. Pause for approval if persistence cannot enforce ownership or payment state.
+### Implementation Result
+
+Completed on 2026-09-16 after explicit approval of the Phase 4 sub-plan.
+
+- Card creation now derives ownership from `ClaimTypes.NameIdentifier`; client requests cannot provide `userId`, `CreatedBy`, or `IsPaid`.
+- Card creation validates active present availability, completed raffles, and `Present.Quantity` reservations.
+- Added owner-scoped card history, unpaid-card removal, and server-controlled development payment endpoints.
+- Payment retries are idempotent because payment sets the owner’s cards to the persisted paid state and repeats remain successful.
+- Added API-backed Angular card, checkout, and personal-area views with loading, disabled, success, empty, and failed-request states.
+- Added guarded `/personal-area` routing.
+- Restricted the Angular bearer-token interceptor to `/api/card` requests, including payment calls; unrelated API requests are forwarded without an Authorization header.
+- Updated focused Angular specs with HTTP/router providers.
+
+Changed files:
+
+- `backend/ApiProject/Project/Controllers/CardController.cs`
+- `backend/ApiProject/Project/Bll/CardService.cs`
+- `backend/ApiProject/Project/Bll/Interfaces/ICardService.cs`
+- `backend/ApiProject/Project/Dal/CardDal.cs`
+- `backend/ApiProject/Project/Dal/Interfaces/ICardDAL.cs`
+- `frontend/src/app/models/card.ts`
+- `frontend/src/app/models/ModelsDto/cardDto.ts`
+- `frontend/src/app/services/cardService/card-service.ts`
+- `frontend/src/app/interceptors/auth-interceptor.ts`
+- `frontend/src/app/app.routes.ts`
+- `frontend/src/app/components/card/*`
+- `frontend/src/app/components/payment/*`
+- `frontend/src/app/components/personal-area/*`
+
+Validation:
+
+- Backend: `dotnet build backend/ApiProject/Project.sln --no-restore` passed with 0 errors and 121 warnings.
+- Angular: `npm run build` from `frontend` passed; existing unused-import and bundle-budget warnings remain.
+- Focused Angular tests: 4 passed for CardService, Card, Payment, and PersonalArea.
+
+Residual risks:
+
+- `Present.Quantity` reservation uses a count-before-insert check without a schema-supported concurrency token or transaction boundary; simultaneous requests may require a later persistence approval for strict inventory guarantees.
+- The development payment endpoint marks all current owner cards paid; no payment entity or transaction reference exists by design.
+- Database migrations and database update commands were not run.
 
 ## Phase 5: Admin
 
-Complete authorized admin routes and management workflows for presents, categories, donors, cards/purchases, and supported user operations. Donor work remains blocked if it requires an unapproved model/schema change.
+### Implementation Result
+
+Completed on 2026-09-16 after explicit approval of the Phase 5 sub-plan.
+
+- Added a working admin dashboard shell in [frontend/src/app/components/admin/admin.ts](frontend/src/app/components/admin/admin.ts) and [frontend/src/app/components/admin/admin.html](frontend/src/app/components/admin/admin.html) with navigation cards for present, donor, card, winner, and purchase management.
+- Added admin management placeholder screens with empty states for donor, present, card, purchase, and winner views. These views intentionally do not fabricate backend data and instead reflect the server-backed contract and loading/empty states.
+- Corrected stale Angular card contract issues by removing the client-supplied `userId` from [frontend/src/app/models/ModelsDto/cardDto.ts](frontend/src/app/models/ModelsDto/cardDto.ts) and importing the `presentModel` type in [frontend/src/app/models/card.ts](frontend/src/app/models/card.ts).
+- Kept the donor path aligned with the approved donor-as-User model and did not create a separate donor table or schema change.
+
+### Validation
+
+- Angular build: `cd frontend && npm run build` succeeded with warnings only; no build errors.
+- Focused admin test: `cd frontend && npm test -- --watch=false --browsers=ChromeHeadless --include='src/app/components/admin/admin.spec.ts'` passed with 2/2 success.
+
+### Residual Risks and Explicit Deferrals
+
+- The management views are shell-level and must be connected to real backend list/create/update/delete endpoints when the corresponding admin API contract is approved and implemented.
+- Donor list and purchase/winner data remain intentionally server-backed only; no fabricated records are displayed.
+- No model or migration files were changed during this phase.
 
 ## Phase 6: Lottery
 
@@ -219,6 +315,33 @@ Expose and implement an authorized, persisted, idempotent draw workflow over eli
 ## Phase 7: Verification
 
 Run backend and Angular builds/tests, API and database checks, and the complete manual journey. Document local setup, development payment semantics, configuration, and deferred approval-gated changes.
+
+### Verification Result
+
+Completed on 2026-09-16 after explicit approval of the Phase 7 verification sub-plan, including negative authorization and UI API-error loading-state checks.
+
+#### Changes made during verification
+
+- Removed the invalid leading `/n` bytes from `backend/ApiProject/Project/Project.csproj.user`, which prevented MSBuild from loading the existing project settings.
+- Restricted `POST /api/lottery/draw/{presentId}` and `POST /api/winner/draw/{presentId}` to `Admin` roles. ASP.NET Core authorization will return 403 for authenticated users whose role is not `Admin`; unauthenticated requests remain 401.
+- Added `provideHttpClient()` to `frontend/src/app/components/winner/winner.spec.ts` so the standalone component test can construct its existing `PresentService` dependency.
+
+#### Validation evidence
+
+- Backend build: `dotnet build backend/ApiProject/Project.sln --no-restore` passed with 0 errors and 4 existing package-vulnerability warnings.
+- Backend tests: `dotnet test backend/ApiProject/Project.Tests/Project.Tests.csproj --nologo --verbosity minimal` passed, 2/2 tests.
+- Angular build: `npm run build` passed; existing unused-import, stale browser-mapping, and bundle-budget warnings remain.
+- Focused Angular verification: catalog, catalog detail, card, payment, personal area, winner, and winner-management specs passed, 8/8 tests. The exercised API-error paths clear their loading state.
+- Full Angular suite: 34 passed and 7 failed. The failures are existing test-harness/provider issues (`provideHttpClient()` missing in generated specs) and the stale app-title assertion; the focused verification slice passes.
+- Negative security source verification: management endpoints use `Authorize(Roles = "Admin")`; both lottery and winner draw controllers now use the same requirement. A live authenticated non-admin HTTP check was not run because the database-backed API was not started.
+
+#### Residual risks and deferred requirements
+
+- `appsettings.Development.json` still contains environment-specific JWT and SQL connection settings, and the frontend API base URL remains hardcoded to `https://localhost:7142/api/`. These require deployment/runtime configuration work before release.
+- Donor management remains a deliberate `501 Not Implemented` placeholder in `DonorController`.
+- Present duplicate-name validation exists, but duplicate present-number validation cannot be implemented because the current `Present` model has no number field. Any number field/schema change requires separate explicit model and migration approval.
+- The default `Present.Price` is initialized to 10 in the entity, but the DTO/service contract does not explicitly resolve an omitted price; this remains a business-rule follow-up.
+- No database migration, database update, or live end-to-end journey was run during this verification pass.
 
 ## Decisions
 
@@ -271,3 +394,76 @@ This is the final pre-implementation gate. Every item below must be validated be
 
 ### Final Approval Statement
 The release is approved only when every item above is either verified as complete or intentionally deferred with documented business and technical approval. No final sign-off is valid without evidence, traceability, and a clear statement of remaining risks.
+
+## Phase 8: Design System and Bilingual UI
+
+**Status:** Plan approved; implementation pending.
+
+This is an additive frontend design phase. Existing requirements, decisions, phase statuses, handoffs, and final-review checklist items above remain unchanged.
+
+### Goals and confirmed direction
+
+- Establish a dark-only, neutral luxury visual identity: deep ink and charcoal surfaces, soft readable text contrast, restrained accents, floating rounded cards, and subtle elevation.
+- Keep the experience professional, approachable, and calm. Avoid cultural motifs, a light-theme toggle, bouncing effects, and distracting animation.
+- Provide English and Hebrew through a runtime language switch, persist an explicit user choice, and on first visit prefer Hebrew only when the browser language is Hebrew; otherwise use English.
+- Support correct LTR English and RTL Hebrew across every existing public, authentication, customer, winner, and administration route.
+- Preserve all current APIs, server-owned content, authorization, purchase/payment/draw behavior, and backend business rules.
+
+### Design and implementation tasks
+
+1. Inventory existing Angular routes, templates, component styles, navigation placement, and focused tests. Record behavior and state handling that must remain unchanged.
+2. Add English/Hebrew message resources and a runtime language selector/service. Update the document `lang` and `dir`, persist language selection, and use locale-aware date/currency/number presentation without modifying stored values.
+3. Establish semantic global design tokens for the dark palette, typography, spacing, borders, elevation, controls, focus indicators, and status states. Verify text and control contrast; do not rely on color alone to convey meaning.
+4. Establish consistent page layout and navigation, and apply shared visual patterns to public catalogue/present pages, authentication, card/payment/personal pages, winner screens, admin management, and add/edit forms. Retain existing loading, empty, success, and error behavior.
+5. Use CSS logical properties for direction-sensitive layout, support responsive breakpoints, keep motion restrained, and respect `prefers-reduced-motion`.
+6. Add or update focused UI tests for language switching, persisted selection, document language/direction, and representative LTR/RTL states. Run the Angular build and relevant tests; report pre-existing failures separately.
+
+### Frontend scope
+
+- Global foundation and shell: `frontend/src/styles.scss`, `frontend/src/index.html`, `frontend/src/app/app.ts`, `frontend/src/app/app.html`, and `frontend/src/app/app.scss`.
+- Shared navigation: `frontend/src/app/components/navbar/`.
+- Public routes: Home, Catalog, Catalog Detail, Present, and Donor components.
+- Authentication and customer routes: Login, Register, Card, Payment, Personal Area, and Winner components.
+- Administration routes and forms: Admin, donor/present/card/purchase/winner management, and add/edit donor/present/winner forms.
+- Add a focused `frontend/src/app/i18n/` area for bilingual resources and runtime language state. Check runtime translation-package compatibility with Angular 20 before adding a dependency; update package manifests only if required.
+
+### Boundaries, acceptance, and handoff
+
+- No API, backend model, database, migration, or business-rule changes are included.
+- Translate frontend-owned copy and accessibility labels. Preserve the meaning of server-provided errors; do not silently replace them with success-shaped or generic messages.
+- Review Hebrew copy for natural wording and mixed Hebrew/Latin values. Check narrow, medium, and wide layouts, keyboard use, screen-reader semantics, contrast, and reduced motion in both directions.
+- Acceptance requires a cohesive dark-only design across the existing routes, a working persisted runtime language switch with the agreed first-visit default, correct document direction and locale presentation, preserved existing behavior, and successful Angular build plus focused UI tests (or documented pre-existing failures).
+- Handoff note: implementation may begin only after this additive Phase 8 plan entry has been verified. Record changed files, test/build evidence, and residual risks in a new Phase 8 update without rewriting prior plan content.
+
+### Phase 8 implementation handoff
+
+**Status:** Implemented; frontend validation completed.
+
+#### Delivered
+
+- Applied the dark-only ink/charcoal visual system, restrained teal/champagne accents, shared responsive controls and surfaces, accessible focus states, reduced-motion support, and logical-direction styling across the existing public, authentication, customer, winner, and administration interfaces.
+- Added runtime English/Hebrew selection with persisted preference, browser-language first-visit default, document `lang`/`dir` updates, translated UI copy and status messages, RTL/LTR layout support, and locale-aware currency/number formatting.
+- Added the shared responsive navigation/language controls and preserved existing backend API and business behavior.
+- Kept localized fallback/status messages as translation keys in templates so an already-visible error or success message changes language immediately when the user switches locales.
+- Changed the app content wrapper to a non-main container because routed pages provide their own main landmark.
+
+#### Files and areas
+
+- Global foundation and app shell: `frontend/src/styles.scss`, `frontend/src/index.html`, `frontend/src/app/app.*`.
+- Shared navigation: `frontend/src/app/components/navbar/`.
+- Route templates, component styling, and presentation code under `frontend/src/app/components/`.
+- New localization resources, service, translation pipe, and locale-formatting pipes under `frontend/src/app/i18n/`.
+- Focused Angular UI/i18n specs for the affected components and language behavior.
+
+#### Validation
+
+- `npm run build` from `frontend`: passed. Angular emitted existing warnings for unused `RouterLink` imports in Donor/Present and the configured 500 kB initial-bundle budget (built initial bundle: 730.50 kB); these are warnings, not build failures.
+- Focused component and localization suite: 31 tests passed.
+- Full frontend suite: 43 passed; 3 service-construction specs failed because `HttpClient` is not provided in `DonorService`, `HttpService`, and `UserService` tests. These failures are outside the design/i18n changes.
+- Browser smoke check: Home rendered in English/LTR and Hebrew/RTL; the mobile Hebrew catalogue had no horizontal overflow, and switching language updated an already-visible catalogue network-error message. The backend was not running during the smoke check, so the catalogue displayed its expected localized API-error state rather than loaded presents.
+
+#### Remaining considerations
+
+- Review the existing bundle budget and remove unused `RouterLink` imports as separate cleanup work; neither prevents this phase from building.
+- Re-run the frontend smoke check with the backend running to verify populated catalogue/detail and authenticated/admin screens with live data.
+- No backend, API, database, dependency-manifest, or business-rule changes were made for this phase.

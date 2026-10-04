@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WinnerManagement } from './winner-management';
+import { WinnerService } from '../../../services/winnerService/winner-service';
 
 describe('WinnerManagement', () => {
   let component: WinnerManagement;
@@ -8,7 +9,8 @@ describe('WinnerManagement', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [WinnerManagement]
+      imports: [WinnerManagement],
+      providers: [{ provide: WinnerService, useValue: { getLatestWinner: () => null } }]
     })
     .compileComponents();
 

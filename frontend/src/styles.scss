@@ -1,0 +1,384 @@
+:root {
+  color-scheme: dark;
+  --color-canvas: #0b0d10;
+  --color-surface: #12161b;
+  --color-surface-raised: #191f26;
+  --color-surface-hover: #202832;
+  --color-border: #303a44;
+  --color-text: #f1f3f5;
+  --color-text-muted: #a7b0ba;
+  --color-accent: #82b8b0;
+  --color-accent-strong: #a0d0c7;
+  --color-highlight: #d2b783;
+  --color-danger: #ff9b9f;
+  --color-danger-surface: #321c21;
+  --color-success: #9bd2ad;
+  --color-success-surface: #17291f;
+  --color-warning: #f0d18e;
+  --color-warning-surface: #302818;
+  --shadow-card: 0 18px 48px rgb(0 0 0 / 26%);
+  --shadow-float: 0 10px 28px rgb(0 0 0 / 20%);
+  --radius-sm: 0.625rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.375rem;
+  --content-width: 76rem;
+  --nav-height: 5rem;
+  --font-sans: Inter, Heebo, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--color-canvas);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% -28rem, rgb(130 184 176 / 11%), transparent 60%),
+    var(--color-canvas);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: var(--color-accent-strong);
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  color: var(--color-text);
+}
+
+button {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-accent-strong);
+  outline-offset: 3px;
+}
+
+img {
+  max-width: 100%;
+}
+
+::selection {
+  color: var(--color-canvas);
+  background: var(--color-accent);
+}
+
+.app-content :where(.purchase-page, .management-page, .admin-dashboard, .catalog-page, .detail-page, .winner-page) {
+  width: min(100% - 2rem, var(--content-width));
+  margin-inline: auto;
+  color: var(--color-text);
+}
+
+.purchase-page,
+.management-page {
+  padding-block: clamp(2rem, 5vw, 4rem);
+}
+
+.purchase-page > h1,
+.management-page h1,
+.admin-dashboard h1,
+.winner-page h1,
+.detail-page h1 {
+  color: var(--color-text);
+  letter-spacing: -0.045em;
+}
+
+.purchase-page > a,
+.management-page a {
+  display: inline-flex;
+  margin-block-end: 1rem;
+  color: var(--color-accent-strong);
+  font-weight: 600;
+}
+
+.app-content button,
+.app-content input,
+.app-content select,
+.app-content textarea {
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.app-content button {
+  padding: 0.65rem 1rem;
+  background: var(--color-accent);
+  color: #0b1514;
+  cursor: pointer;
+  font-weight: 700;
+  transition: background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.app-content button:hover:not(:disabled) {
+  background: var(--color-accent-strong);
+  box-shadow: var(--shadow-float);
+}
+
+.app-content button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.app-content button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.app-content input,
+.app-content select,
+.app-content textarea {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+}
+
+.app-content label {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.app-content table {
+  width: 100%;
+  border-collapse: collapse;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.app-content th,
+.app-content td {
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: start;
+}
+
+.app-content th {
+  background: var(--color-surface-raised);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+.app-content tr:last-child td {
+  border-bottom: 0;
+}
+
+.app-content .management-page .cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
+}
+
+.app-content .info-card,
+.app-content .purchase-page li {
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-float);
+}
+
+.app-content .info-card h2 {
+  color: var(--color-text);
+}
+
+.app-content .info-card p,
+.app-content .empty-state {
+  color: var(--color-text-muted);
+}
+
+.app-content .purchase-page form {
+  display: grid;
+  max-width: 36rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+  margin-block: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-float);
+}
+
+.app-content .purchase-page form label {
+  grid-column: 1 / -1;
+}
+
+.app-content .purchase-page ul {
+  display: grid;
+  gap: 0.7rem;
+  margin: 1.25rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.app-content .purchase-page li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--color-text);
+}
+
+.app-content .empty-state {
+  margin-block-start: 1rem;
+  padding: 1.25rem;
+}
+
+.app-content .auth-container {
+  min-height: calc(100vh - var(--nav-height));
+  background: transparent;
+}
+
+.app-content .auth-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(155deg, var(--color-surface-raised), var(--color-surface));
+  box-shadow: var(--shadow-card);
+}
+
+.app-content .auth-title,
+.app-content .form-label {
+  color: var(--color-text);
+}
+
+.app-content .form-input {
+  border-color: var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas);
+  color: var(--color-text);
+}
+
+.app-content .form-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.8;
+}
+
+.app-content .form-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgb(130 184 176 / 18%);
+}
+
+.app-content .form-input:disabled {
+  background: var(--color-surface-hover);
+  color: var(--color-text-muted);
+}
+
+.app-content .error-message {
+  color: var(--color-danger);
+}
+
+.app-content .alert.alert-error {
+  border-color: rgb(255 155 159 / 30%);
+  background: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+.app-content .alert.alert-success {
+  border-color: rgb(155 210 173 / 30%);
+  background: var(--color-success-surface);
+  color: var(--color-success);
+}
+
+.app-content .btn.btn-primary {
+  background: var(--color-accent);
+  color: #0b1514;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.app-content .btn.btn-primary:hover:not(:disabled) {
+  transform: none;
+  background: var(--color-accent-strong);
+  box-shadow: var(--shadow-float);
+}
+
+.app-content .btn.btn-primary:active:not(:disabled) {
+  transform: none;
+}
+
+.app-content .footer-text {
+  color: var(--color-text-muted);
+}
+
+.app-content .auth-link {
+  color: var(--color-accent-strong);
+}
+
+.app-content .auth-link:hover {
+  color: var(--color-text);
+}
+
+.empty-state,
+.state,
+.state-message {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+
+.state-error,
+.state-message.error {
+  border-color: rgb(255 155 159 / 32%);
+  background: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+.state-message.success {
+  border-color: rgb(155 210 173 / 30%);
+  background: var(--color-success-surface);
+  color: var(--color-success);
+}
+
+@media (max-width: 640px) {
+  .app-content :where(.purchase-page, .management-page, .admin-dashboard, .catalog-page, .detail-page, .winner-page) {
+    width: min(100% - 1rem, var(--content-width));
+  }
+
+  .app-content table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

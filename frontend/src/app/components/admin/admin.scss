@@ -1,0 +1,68 @@
+.admin-dashboard {
+  display: block;
+  padding-block: clamp(2rem, 5vw, 4rem);
+}
+
+.admin-header {
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  color: var(--color-highlight);
+}
+
+.admin-header h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  letter-spacing: -0.045em;
+}
+
+.subtitle {
+  margin-top: 0.5rem;
+  color: var(--color-text-muted);
+}
+
+.section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.admin-card {
+  display: block;
+  background: linear-gradient(155deg, var(--color-surface-raised), var(--color-surface));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  color: var(--color-text);
+  text-decoration: none;
+  box-shadow: var(--shadow-float);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.admin-card:hover {
+  border-color: rgb(130 184 176 / 55%);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text);
+}
+
+.admin-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.admin-card p {
+  margin: 0 0 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.admin-card span {
+  font-weight: 600;
+  color: var(--color-accent-strong);
+}

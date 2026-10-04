@@ -1,19 +1,26 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Project.Bll.Interfaces;
-using Project.Dto;
 using Project.Models;
 
 namespace Project.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/winner")]
+    [Authorize(Roles = "Admin")]
     public class WinnerController : ControllerBase
     {
-        IWinnerService _randomService;
-        public WinnerController(IWinnerService randomService)
+        private readonly IWinnerService _winnerService;
+
+        public WinnerController(IWinnerService winnerService)
         {
-            _randomService = randomService;
+            _winnerService = winnerService;
+        }
+
+        [HttpPost("draw/{presentId:int}")]
+        public async Task<Result<Winner>> DrawWinner(int presentId, [FromQuery] int? lotteryId = null)
+        {
+            return await _winnerService.DrawWinnerForPresentAsync(presentId, lotteryId);
         }
     }
 }

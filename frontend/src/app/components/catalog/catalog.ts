@@ -2,14 +2,16 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { categoryModel } from '../../models/category';
 import { presentModel } from '../../models/present';
 import { CategoryService } from '../../services/categoryService/category-service';
 import { PresentQuery, PresentService } from '../../services/presentService/present-service';
+import { LocalizedCurrencyPipe } from '../../i18n/localized-currency.pipe';
 
 @Component({
   selector: 'app-catalog',
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, LocalizedCurrencyPipe],
   templateUrl: './catalog.html',
   styleUrl: './catalog.scss'
 })
@@ -44,12 +46,12 @@ export class Catalog {
     this.presentService.getAllPresents(query).subscribe({
       next: (result) => {
         this.presents = result.success ? result.data ?? [] : [];
-        this.errorMessage = result.success ? '' : result.message || 'Unable to load the catalogue.';
+        this.errorMessage = result.success ? '' : result.message || 'catalog.loadFailed';
         this.loading = false;
       },
       error: () => {
         this.presents = [];
-        this.errorMessage = 'Unable to load the catalogue. Please try again.';
+        this.errorMessage = 'catalog.loadFailed';
         this.loading = false;
       }
     });

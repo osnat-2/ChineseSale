@@ -1,0 +1,97 @@
+.home-page {
+  display: grid;
+  width: min(100% - 2rem, var(--content-width));
+  min-height: min(76vh, 54rem);
+  grid-template-columns: minmax(0, 1.6fr) minmax(17rem, 0.7fr);
+  align-items: center;
+  gap: clamp(2rem, 6vw, 6rem);
+  margin-inline: auto;
+  padding-block: clamp(4rem, 10vw, 8rem);
+}
+
+.home-hero {
+  max-width: 54rem;
+}
+
+.home-hero .eyebrow,
+.home-account .eyebrow {
+  color: var(--color-highlight);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.home-hero h1 {
+  max-width: 12ch;
+  margin: 1.2rem 0;
+  color: var(--color-text);
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-weight: 600;
+  letter-spacing: -0.075em;
+  line-height: 0.98;
+}
+
+.home-intro {
+  max-width: 40rem;
+  margin-block-end: 2rem;
+  color: var(--color-text-muted);
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+}
+
+.primary-link,
+.home-account-actions a {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.1rem;
+  border: 1px solid rgb(130 184 176 / 45%);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: #0b1514;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.primary-link:hover,
+.home-account-actions a:hover {
+  background: var(--color-accent-strong);
+  box-shadow: var(--shadow-float);
+  color: #0b1514;
+}
+
+.home-account {
+  padding: clamp(1.4rem, 3vw, 2rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(150deg, rgb(25 31 38 / 95%), rgb(18 22 27 / 92%));
+  box-shadow: var(--shadow-card);
+}
+
+.home-account > p:not(.eyebrow) {
+  color: var(--color-text-muted);
+}
+
+.home-account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-block-start: 1.2rem;
+}
+
+.home-account-actions a:last-child {
+  border-color: var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+}
+
+@media (max-width: 760px) {
+  .home-page {
+    min-height: auto;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding-block: 4rem;
+  }
+}
