@@ -2,12 +2,13 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { UserService } from '../../services/userService/user-service';
 import { userDtoModel } from '../../models/ModelsDto/userDto';
 
 @Component({
   selector: 'app-register',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './register.html',
   styleUrl: './register.scss',
 })
@@ -36,7 +37,7 @@ export class Register implements OnInit {
 
   register(): void {
     if (this.registerForm.invalid) {
-      this.errorMessage = 'Please fill in all required fields correctly.';
+      this.errorMessage = 'auth.invalidForm';
       return;
     }
 
@@ -49,10 +50,10 @@ export class Register implements OnInit {
       next: (response) => {
         this.isSubmitting = false;
         if (response?.isSuccess === false) {
-          this.errorMessage = response?.message || 'Registration failed.';
+          this.errorMessage = response?.message || 'auth.registerFailed';
           return;
         }
-        this.successMessage = 'Registration successful!';
+        this.successMessage = 'auth.registerSuccess';
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 2000);
@@ -60,7 +61,7 @@ export class Register implements OnInit {
       error: (error) => {
         this.isSubmitting = false;
         this.errorMessage =
-          error?.error?.message || error?.message || 'Registration failed. Please try again.';
+          error?.error?.message || error?.message || 'auth.registerTryAgain';
       },
     });
   }

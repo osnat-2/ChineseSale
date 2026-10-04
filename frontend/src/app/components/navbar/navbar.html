@@ -1,0 +1,26 @@
+<header class="site-header">
+  <nav class="site-nav" [attr.aria-label]="'nav.main' | translate">
+    <a class="brand" routerLink="/home" [attr.aria-label]="'nav.brandHome' | translate">
+      <span class="brand-mark" aria-hidden="true">C</span>
+      <span>Chinese <strong>Sale</strong></span>
+    </a>
+
+    <div class="nav-links">
+      <a routerLink="/home" routerLinkActive="is-active">{{ 'nav.home' | translate }}</a>
+      <a routerLink="/catalog" routerLinkActive="is-active">{{ 'nav.catalog' | translate }}</a>
+      <a *ngIf="isAuthenticated()" routerLink="/card" routerLinkActive="is-active">{{ 'nav.myCards' | translate }}</a>
+      <a *ngIf="isAuthenticated()" routerLink="/personal-area" routerLinkActive="is-active">{{ 'nav.purchases' | translate }}</a>
+      <a *ngIf="isAdmin()" routerLink="/admin" routerLinkActive="is-active">{{ 'nav.admin' | translate }}</a>
+    </div>
+
+    <div class="nav-actions">
+      <div class="language-switch" role="group" [attr.aria-label]="'nav.language' | translate">
+        <button type="button" lang="en" [attr.aria-label]="'nav.english' | translate" [attr.aria-pressed]="language.currentLanguage() === 'en'" (click)="setLanguage('en')">EN</button>
+        <button type="button" lang="he" [attr.aria-label]="'nav.hebrew' | translate" [attr.aria-pressed]="language.currentLanguage() === 'he'" (click)="setLanguage('he')">עברית</button>
+      </div>
+      <a *ngIf="!isAuthenticated()" class="nav-login" routerLink="/login">{{ 'nav.login' | translate }}</a>
+      <a *ngIf="!isAuthenticated()" class="nav-register" routerLink="/register">{{ 'nav.register' | translate }}</a>
+      <button *ngIf="isAuthenticated()" class="nav-logout" type="button" (click)="logout()">{{ 'nav.logout' | translate }}</button>
+    </div>
+  </nav>
+</header>

@@ -1,0 +1,14 @@
+<main class="purchase-page">
+	<a routerLink="/card">{{ 'payment.back' | translate }}</a>
+	<h1>{{ 'payment.title' | translate }}</h1>
+	<p *ngIf="loading" role="status">{{ 'payment.loading' | translate }}</p>
+	<p *ngIf="errorMessage" role="alert">{{ errorMessage | translate }}</p>
+	<p *ngIf="successMessage" role="status">{{ successMessage | translate }}</p>
+	<ul *ngIf="!loading && cards.length">
+		<li *ngFor="let card of cards">{{ 'card.reference' | translate:{cardId: card.id, presentId: card.presentId} }}</li>
+	</ul>
+		<p *ngIf="!loading && !cards.length && !successMessage">{{ 'payment.empty' | translate }}</p>
+	<button type="button" (click)="pay()" [disabled]="loading || paying || cards.length === 0">
+			{{ paying ? ('payment.processing' | translate) : ('payment.pay' | translate) }}
+	</button>
+</main>

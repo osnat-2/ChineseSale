@@ -1,34 +1,34 @@
-﻿using Project.BLL.Interfaces;
-using Project.DAL.Interfaces;
+﻿using Project.Bll.Interfaces;
+using Project.Dal.Interfaces;
 using Project.Models;
 
-namespace Project.BLL
+namespace Project.Bll
 {
     public class WinnerService : IWinnerService
     {
         private readonly IWinnerDal _winnerDal;
         private readonly IEmailService _emailService;
-        
+
         public WinnerService(IWinnerDal winnerDal, IEmailService emailService)
         {
             _winnerDal = winnerDal;
             _emailService = emailService;
         }
 
-        //public async Task<Result<Winner>> DrawWinnerForPresentAsync(int presentId)
-        //{
-        //    if (presentId <= 0)
-        //    {
-        //        return new Result<Winner>
-        //        {
-        //            Success = false,
-        //            Message = "Invalid present id",
-        //            Data = null
-        //        };
-        //    }
+        public async Task<Result<Winner>> DrawWinnerForPresentAsync(int presentId, int? lotteryId = null)
+        {
+            if (presentId <= 0)
+            {
+                return new Result<Winner>
+                {
+                    Success = false,
+                    Message = "Invalid present id.",
+                    Data = null
+                };
+            }
 
-        //    return await _winnerDAL.DrawWinnerForPresentAsync(presentId);
-        //}
+            return await _winnerDal.DrawWinnerForPresentAsync(presentId, lotteryId);
+        }
 
         //public async Task<Result<Dictionary<Present, List<User>>>> GetPresentsWithUsersAsync()
         //{

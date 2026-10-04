@@ -13,7 +13,7 @@ Own the Phase 1 contract and data-integrity audit. Do not implement feature beha
 
 - Read root `plan.md` and existing frontend instructions.
 - Inspect and build the C# solution before proposing fixes.
-- Trace controller -> BLL -> DAL -> EF model/context -> migration paths.
+- Trace controller -> Bll -> DAL -> EF model/context -> migration paths.
 - Compare DTO namespaces, profiles, serialized request/response shapes, routes, status codes, and authorization attributes.
 - Verify JWT creation, claims, role mapping, and `NameIdentifier` behavior.
 - Verify donor persistence and card user ownership in source and database configuration.

@@ -1,18 +1,13 @@
-﻿using Project.Models;
-using Project.Models.ModelsDTO;
+﻿using Project.Dto;
+using Project.Models;
 
-namespace Project.BLL.Interfaces
+namespace Project.Bll.Interfaces
 {
     public interface ICardService
     {
-        Task<Result<Card>> AddCard(CardDto cardDto);
-        //Task<Result<Card>> GetMostExpensiveCardsAsync();
-        //Task<Result<User>> GetAllCardBuyersAsync();
-        //Task<Result<Card>> GetCardsByUserAsync(int userId);
-        //Task<Result<Card>> GetUnpaidCardsAsync(int userId);
-        //Task<Result<Card>> GetCardsByQuantityAsync();
-        //Task<Result<Card>> DeleteCardAsync(int cardId);
-        //Task<Result<Card>> ProcessPaymentForUserAsync(int userId);
-        //Task<Result<Card>> GetCardsWithPresentsAsync();
+        Task<Result<Card>> AddCard(CardDto cardDto, int userId);
+        Task<Result<Card>> GetCardsByUserAsync(int userId, bool? isPaid = null);
+        Task<Result<Card>> DeleteCardAsync(int cardId, int userId);
+        Task<Result<Card>> ProcessPaymentAsync(int userId);
     }
 }

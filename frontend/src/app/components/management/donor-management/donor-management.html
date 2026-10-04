@@ -1,1 +1,33 @@
-<p>donor-management works!</p>
+<section class="management-page">
+  <header>
+    <p class="eyebrow">{{ 'management.donorEyebrow' | translate }}</p>
+    <h1>{{ 'management.donorTitle' | translate }}</h1>
+  </header>
+
+  <div *ngIf="donors.length === 0" class="empty-state">
+    {{ 'management.donorEmpty' | translate }}
+  </div>
+
+  <table *ngIf="donors.length > 0">
+    <thead>
+      <tr>
+        <th>{{ 'management.name' | translate }}</th>
+        <th>{{ 'management.email' | translate }}</th>
+        <th>{{ 'management.phone' | translate }}</th>
+        <th>{{ 'management.status' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let donor of donors">
+        <td>{{ donor.name }}</td>
+        <td>{{ donor.email }}</td>
+        <td>{{ donor.phone }}</td>
+        <td>
+          <span [class.inactive]="!donor.isActive">
+            {{ (donor.isActive ? 'management.active' : 'management.inactive') | translate }}
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>

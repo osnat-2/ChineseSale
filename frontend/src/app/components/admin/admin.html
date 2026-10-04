@@ -1,0 +1,15 @@
+<section class="admin-dashboard">
+  <header class="admin-header">
+    <p class="eyebrow">{{ 'admin.eyebrow' | translate }}</p>
+    <h1>{{ 'admin.title' | translate }}</h1>
+    <p class="subtitle">{{ 'admin.intro' | translate }}</p>
+  </header>
+
+  <div class="section-grid">
+    <a *ngFor="let section of sections" class="admin-card" [routerLink]="section.path">
+      <h2>{{ section.title | translate }}</h2>
+      <p>{{ section.description | translate }}</p>
+      <span>{{ 'admin.open' | translate }}</span>
+    </a>
+  </div>
+</section>

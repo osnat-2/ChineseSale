@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Present image unavailable">
+  <rect width="800" height="600" fill="#e8e3d9" />
+  <path d="M320 245h160v155H320zM295 220h210v35H295z" fill="#b24722" />
+  <path d="M390 220v180M320 295h160" stroke="#f1eee7" stroke-width="14" />
+  <text x="400" y="470" fill="#53626a" font-family="Georgia, serif" font-size="30" text-anchor="middle">Present image unavailable</text>
+</svg>

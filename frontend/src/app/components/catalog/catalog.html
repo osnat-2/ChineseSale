@@ -1,0 +1,55 @@
+<main class="catalog-page">
+  <header class="catalog-header">
+    <p class="eyebrow">{{ 'catalog.eyebrow' | translate }}</p>
+    <h1>{{ 'catalog.title' | translate }}</h1>
+    <p class="intro">{{ 'catalog.intro' | translate }}</p>
+  </header>
+
+  <form class="filters" (ngSubmit)="loadPresents()" [attr.aria-label]="'catalog.filters' | translate">
+    <label>
+      {{ 'catalog.search' | translate }}
+      <input type="search" name="search" [(ngModel)]="search" [placeholder]="'catalog.searchPlaceholder' | translate" />
+    </label>
+    <label>
+      {{ 'catalog.category' | translate }}
+      <select name="category" [(ngModel)]="categoryId">
+        <option value="">{{ 'catalog.allCategories' | translate }}</option>
+        <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
+      </select>
+    </label>
+    <label>
+      {{ 'catalog.sortBy' | translate }}
+      <select name="sortBy" [(ngModel)]="sortBy">
+        <option value="name">{{ 'catalog.name' | translate }}</option>
+        <option value="price">{{ 'catalog.price' | translate }}</option>
+      </select>
+    </label>
+    <label>
+      {{ 'catalog.direction' | translate }}
+      <select name="sortDirection" [(ngModel)]="sortDirection">
+        <option value="asc">{{ 'catalog.ascending' | translate }}</option>
+        <option value="desc">{{ 'catalog.descending' | translate }}</option>
+      </select>
+    </label>
+    <button type="submit">{{ 'catalog.apply' | translate }}</button>
+  </form>
+
+  <p *ngIf="loading" class="state" role="status">{{ 'catalog.loading' | translate }}</p>
+  <p *ngIf="!loading && errorMessage" class="state state-error" role="alert">{{ errorMessage | translate }}</p>
+  <p *ngIf="!loading && !errorMessage && presents.length === 0" class="state">{{ 'catalog.empty' | translate }}</p>
+
+  <section *ngIf="!loading && !errorMessage && presents.length" class="present-grid" [attr.aria-label]="'catalog.availablePresents' | translate">
+    <article *ngFor="let present of presents" class="present-card">
+      <img [src]="present.imageUrl || 'assets/images/present-placeholder.svg'" [alt]="present.name" (error)="imageFallback($event)" />
+      <div class="present-card-body">
+        <p class="card-label">{{ 'catalog.present' | translate }}</p>
+        <h2><bdi>{{ present.name }}</bdi></h2>
+        <p><bdi>{{ present.description }}</bdi></p>
+        <div class="card-footer">
+          <strong>{{ present.price | localizedCurrency }}</strong>
+          <a [routerLink]="['/catalog', present.id]">{{ 'catalog.viewDetails' | translate }}</a>
+        </div>
+      </div>
+    </article>
+  </section>
+</main>

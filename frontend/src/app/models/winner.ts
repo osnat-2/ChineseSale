@@ -1,6 +1,6 @@
 export class winnerModel {
     id!: number;
     presentId!: number;
-    userId!: number;
-    timeOfRaffle!: Date;
+    cardId!: number;
+    lotteryId!: number;
 }

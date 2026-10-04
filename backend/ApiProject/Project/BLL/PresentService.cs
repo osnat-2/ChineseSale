@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
-using Project.BLL.Interfaces;
-using Project.DAL.Interfaces;
+using Project.Bll.Interfaces;
+using Project.Dal.Interfaces;
+using Project.Dto;
 using Project.Models;
-using Project.Models.ModelsDTO;
 using Project.Validators;
 using System.Threading.Tasks;
 
-namespace Project.BLL
+namespace Project.Bll
 {
     public class PresentService : IPresentService
     {
@@ -30,7 +30,7 @@ namespace Project.BLL
                 };
             }
 
-            if (!Validator.ValidName(presentDto.Name) || presentDto.Price <= 0 || presentDto.Quantity < 0 || presentDto.CategoryId <= 0 || presentDto.DonorId <= 0)
+            if (!Validator.ValidName(presentDto.Name) || presentDto.Quantity < 0 || presentDto.CategoryId <= 0 || presentDto.DonorId <= 0)
             {
                 return new Result<Present>
                 {
@@ -56,9 +56,53 @@ namespace Project.BLL
             return await _presentDal.AddPresentAsync(present);
         }
 
-        public async Task<Result<Present>> GetAllPresentsAsync(bool onlyActive = true)
+        public async Task<Result<Present>> GetAllPresentsAsync(
+            bool onlyActive = true,
+            string? search = null,
+            int? categoryId = null,
+            string? sortBy = null,
+            string? sortDirection = null)
         {
-            return await _presentDal.GetAllPresentsAsync(onlyActive);
+            if (categoryId <= 0)
+            {
+                return new Result<Present>
+                {
+                    Success = false,
+                    Message = "Category ID must be greater than zero.",
+                    Data = Enumerable.Empty<Present>()
+                };
+            }
+
+            var normalizedSortBy = string.IsNullOrWhiteSpace(sortBy) ? null : sortBy.Trim().ToLowerInvariant();
+            if (normalizedSortBy is not null && normalizedSortBy is not ("name" or "price"))
+            {
+                return new Result<Present>
+                {
+                    Success = false,
+                    Message = "Sort by must be either 'name' or 'price'.",
+                    Data = Enumerable.Empty<Present>()
+                };
+            }
+
+            var normalizedSortDirection = string.IsNullOrWhiteSpace(sortDirection)
+                ? "asc"
+                : sortDirection.Trim().ToLowerInvariant();
+            if (normalizedSortDirection is not ("asc" or "desc"))
+            {
+                return new Result<Present>
+                {
+                    Success = false,
+                    Message = "Sort direction must be either 'asc' or 'desc'.",
+                    Data = Enumerable.Empty<Present>()
+                };
+            }
+
+            return await _presentDal.GetAllPresentsAsync(
+                onlyActive,
+                string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+                categoryId,
+                normalizedSortBy,
+                normalizedSortDirection);
         }
 
         public async Task<Result<Present>> GetPresentByIdAsync(int id)
@@ -103,7 +147,7 @@ namespace Project.BLL
                 };
             }
 
-            if (!Validator.ValidName(presentDto.Name) || presentDto.Price <= 0 || presentDto.Quantity < 0 || presentDto.CategoryId <= 0 || presentDto.DonorId <= 0)
+            if (!Validator.ValidName(presentDto.Name) || presentDto.Quantity < 0 || presentDto.CategoryId <= 0 || presentDto.DonorId <= 0)
             {
                 return new Result<Present>
                 {

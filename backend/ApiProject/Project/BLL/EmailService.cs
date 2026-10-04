@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Project.BLL.Interfaces;
-using Project.DAL.Interfaces;
+using Project.Bll.Interfaces;
+using Project.Dal.Interfaces;
 using Project.Models;
 using Project.Validators;
 using System.Net.Mail;
 
-namespace Project.BLL
+namespace Project.Bll
 {
     public class EmailService : IEmailService
     {

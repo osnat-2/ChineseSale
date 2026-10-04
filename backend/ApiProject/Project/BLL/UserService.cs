@@ -1,21 +1,23 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Project.BLL.Interfaces;
-using Project.DAL;
-using Project.DAL.Interfaces;
+using Project.Bll.Interfaces;
+using Project.Dal;
+using Project.Dal.Interfaces;
+using Project.Dto;
 using Project.Models;
-using Project.Models.ModelsDTO;
 using Project.Validators;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Text.RegularExpressions;
 
-namespace Project.BLL
+namespace Project.Bll
 {
     public class UserService : IUserService
     {
+        private const string UserRole = "User";
+        private const string DonorRole = "Donor";
+        private const string AdminRole = "Admin";
         private readonly JWTSettings _jwtSettings;  // הוספת שדה להגדרות ה־JWT
         private readonly IUserDal _userDal;
         private readonly IMapper _mapper;
@@ -72,7 +74,7 @@ namespace Project.BLL
                 Subject = new ClaimsIdentity(new Claim[] {
                     new Claim(ClaimTypes.Name, user.Name),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role),
+                    new Claim(ClaimTypes.Role, user.Role?.Name ?? UserRole),
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.MobilePhone, user.Phone ?? ""),
                     new Claim("isActive", user.IsActive.ToString().ToLower()),
@@ -100,10 +102,9 @@ namespace Project.BLL
             if (userDto != null)
             {
                 var user = await _userDal.GetUserByEmail(userDto.Email);
-                if (user == null || user.Email == userDto.Email && Validator.ValidateData(userDto.Name, userDto.Email, userDto.Phone))
+                if (user == null && Validator.ValidateData(userDto.Name, userDto.Email, userDto.Phone))
                 {
                     var u = _mapper.Map<User>(userDto);
-                    Console.WriteLine("u: ", u);
                     if (u == null)
                         return new Result<User>
                         {
@@ -111,9 +112,7 @@ namespace Project.BLL
                             Message = "failed to map object",
                             Data = null
                         };
-                    // הצפנת הסיסמה לפני שמירתה במסד הנתונים
-                    u.Password = BCrypt.Net.BCrypt.HashPassword(u.Password);
-                    return await _userDal.Register(u);
+                    return await CreateUserAsync(u, UserRole);
                 }
             }
             return new Result<User>
@@ -122,6 +121,41 @@ namespace Project.BLL
                 Message = "Error details",
                 Data = null
             };
+        }
+
+        public async Task<Result<User>> AddDonor(UserDto userDto) => await AddPrivilegedUserAsync(userDto, DonorRole);
+
+        public async Task<Result<User>> AddAdmin(UserDto userDto) => await AddPrivilegedUserAsync(userDto, AdminRole);
+
+        private async Task<Result<User>> AddPrivilegedUserAsync(UserDto userDto, string roleName)
+        {
+            if (userDto == null || !Validator.ValidateData(userDto.Name, userDto.Email, userDto.Phone))
+            {
+                return new Result<User> { Success = false, Message = "Invalid user details", Data = null };
+            }
+
+            if (await _userDal.GetUserByEmail(userDto.Email) != null)
+            {
+                return new Result<User> { Success = false, Message = "Email already exists", Data = null };
+            }
+
+            var user = _mapper.Map<User>(userDto);
+            return await CreateUserAsync(user, roleName);
+        }
+
+        private async Task<Result<User>> CreateUserAsync(User user, string roleName)
+        {
+            var role = await _userDal.GetRoleByName(roleName);
+            if (role == null)
+            {
+                return new Result<User> { Success = false, Message = $"Role '{roleName}' was not found", Data = null };
+            }
+
+            user.RoleId = role.Id;
+            user.IsActive = true;
+            user.IsDeleted = false;
+            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+            return await _userDal.Register(user);
         }
     }
 }

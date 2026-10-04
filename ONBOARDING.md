@@ -8,7 +8,7 @@ Chinese Sale הוא אתר למכירת כרטיסים למכירה סינית: 
 
 הארכיטקטורה מחולקת לשני חלקים:
 
-- **Backend**: Web API של ASP.NET Core על .NET 8, עם Controllers, שכבות BLL ו-DAL, DTOs, AutoMapper, JWT ו-Entity Framework Core.
+- **Backend**: Web API של ASP.NET Core על .NET 8, עם Controllers, שכבות Bll ו-DAL, DTOs, AutoMapper, JWT ו-Entity Framework Core.
 - **Frontend**: אפליקציית Angular 20, עם routes, components, services, מודלים ו-UI המבוסס גם על Angular Material ו-Bootstrap.
 - **תקשורת**: ה-Frontend פונה ל-API באמצעות `HttpClient`. כתובת ה-API המוגדרת בשירות ה-HTTP היא `https://localhost:7142/api/`.
 
@@ -61,7 +61,7 @@ git branch -vv
 
    אם יש שינויים מקומיים לא שמורים או שהפקודה אינה יכולה לבצע Fast-forward, עוצרים ומתאמים לפני שממשיכים. אין לבצע `reset`, `clean`, `checkout` או מחיקה של עבודה קיימת בלי אישור מפורש.
 
-2. עובדים, בודקים ומבצעים commits קטנים וברורים בענף `Gilli`.
+2. עובדים, בודקים ומבצעים commits קטנים וברורים בענף האישי.
 3. לפני שיתוף העבודה מריצים את הבדיקות הרלוונטיות ובודקים את ה-diff.
 4. דוחפים את הענף:
 
@@ -101,7 +101,7 @@ Agent הוא מומחה לתחום עבודה; Skill הוא ההליך והכל�
 
 ### חוזה ותשתית Backend
 
-אחראי על בדיקת המודלים הקיימים, DTOs, Profiles, Controllers, BLL ו-DAL, ועל תיעוד חוזי ה-API. זהו שלב התשתית (`contract-baseline`) והוא צריך להסתיים לפני התאמות Angular. אין להוסיף ישויות או לשנות סכימה בלי אישור נפרד.
+אחראי על בדיקת המודלים הקיימים, DTOs, Profiles, Controllers, Bll ו-DAL, ועל תיעוד חוזי ה-API. זהו שלב התשתית (`contract-baseline`) והוא צריך להסתיים לפני התאמות Angular. אין להוסיף ישויות או לשנות סכימה בלי אישור נפרד.
 
 ### Auth
 
@@ -153,7 +153,7 @@ dotnet run --launch-profile http
 ```powershell
 Set-Location frontend
 npm install
-npm start
+ng s -o
 ```
 
 פותחים `http://localhost:4200/`. בזמן הפיתוח Angular יבנה מחדש לאחר שינויים. בדיקות שימושיות:

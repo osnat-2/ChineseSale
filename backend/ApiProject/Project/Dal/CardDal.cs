@@ -1,13 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Project.DAL.Interfaces;
+using Project.Dal.Interfaces;
 using Project.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Project.DAL
+namespace Project.Dal
 {
     public class CardDal : ICardDal
     {
@@ -295,6 +295,12 @@ namespace Project.DAL
         {
             try
             {
+                var present = await dbContext.Present.FirstOrDefaultAsync(p => p.Id == card.PresentId && p.IsActive);
+                if (present == null)
+                {
+                    return new Result<Card> { Success = false, Message = "Present is unavailable.", Data = null };
+                }
+
                 // Prevent purchase if a winner has already been drawn for this present
                 var raffleExists = await dbContext.Winner.AnyAsync(w => w.PresentId == card.PresentId);
                 if (raffleExists)
@@ -307,6 +313,12 @@ namespace Project.DAL
                     };
                 }
 
+                var reservedCount = await dbContext.Card.CountAsync(c => c.PresentId == card.PresentId && !c.IsDeleted);
+                if (reservedCount >= present.Quantity)
+                {
+                    return new Result<Card> { Success = false, Message = "Present is sold out.", Data = null };
+                }
+
                 dbContext.Card.Add(card);
                 await dbContext.SaveChangesAsync();  // שמירה במסד הנתונים
 
@@ -314,7 +326,7 @@ namespace Project.DAL
                 {
                     Success = true,
                     Message = "New card created successfully.",
-                    Data = null  // לא נדרש להחזיר נתונים נוספים
+                    Data = new[] { card }
                 };
             }
             catch (Exception ex)
@@ -329,52 +341,55 @@ namespace Project.DAL
             }
         }
 
-        //public async Task<Result<Card>> ProcessPaymentForUserAsync(int userId)
-        //{
-        //    try
-        //    {
-        //        // 1. חפש את כל הכרטיסים עבור המשתמש הספציפי שלא שולם עדיין
-        //        var userCards = await dbContext.Card
-        //            .Where(c => c.UserId == userId && c.IsPaid == false)  // כרטיסים שלא שולם עדיינם
-        //            .ToListAsync();
+        public async Task<Result<Card>> GetCardsByUserAsync(int userId, bool? isPaid = null)
+        {
+            var query = dbContext.Card
+                .Include(card => card.Present)
+                .Where(card => card.CreatedBy == userId);
+            if (isPaid.HasValue)
+            {
+                query = query.Where(card => card.IsPaid == isPaid.Value);
+            }
 
-        //        // 2. אם לא נמצאו כרטיסים, פשוט סיים את הפונקציה
-        //        if (!userCards.Any())
-        //        {
-        //            return new Result<Card>
-        //            {
-        //                Success = false,
-        //                Message = "No unpaid cards found for this user.",
-        //                Data = null  // לא נדרש להחזיר נתונים נוספים
-        //            };
-        //        }
+            var cards = await query.OrderByDescending(card => card.CreatedAt).ToListAsync();
+            return new Result<Card> { Success = true, Message = "Cards loaded successfully.", Data = cards };
+        }
 
-        //        // 3. עדכון כל הכרטיסים ל-"שולם"
-        //        foreach (var card in userCards)
-        //        {
-        //            card.IsPaid = true;  // עדכון הסטטוס של הכרטיס לשולם
-        //        }
+        public async Task<Result<Card>> DeleteCardAsync(int cardId, int userId)
+        {
+            var card = await dbContext.Card.FirstOrDefaultAsync(item => item.Id == cardId && item.CreatedBy == userId);
+            if (card == null)
+            {
+                return new Result<Card> { Success = false, Message = "Card not found.", Data = null };
+            }
+            if (card.IsPaid)
+            {
+                return new Result<Card> { Success = false, Message = "Paid cards cannot be removed.", Data = null };
+            }
 
-        //        dbContext.Card.UpdateRange(userCards);  // עדכון כל הכרטיסים יחד
-        //        await dbContext.SaveChangesAsync();  // שמירה במסד הנתונים
+            card.IsDeleted = true;
+            card.IsActive = false;
+            card.DeletedAt = DateTime.UtcNow;
+            await dbContext.SaveChangesAsync();
+            return new Result<Card> { Success = true, Message = "Card removed successfully.", Data = new[] { card } };
+        }
 
-        //        return new Result<Card>
-        //        {
-        //            Success = true,
-        //            Message = "Payment processed successfully for the user.",
-        //            Data = null  // לא נדרש להחזיר נתונים נוספים
-        //        };
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.LogError(ex, "Error occurred while processing payments for the user.");
-        //        return new Result<Card>
-        //        {
-        //            Success = false,
-        //            Message = "An error occurred while processing the payment. Please try again later.",
-        //            Data = null
-        //        };
-        //    }
-        //}
+        public async Task<Result<Card>> ProcessPaymentAsync(int userId)
+        {
+            var cards = await dbContext.Card.Where(card => card.CreatedBy == userId).ToListAsync();
+            if (cards.Count == 0)
+            {
+                return new Result<Card> { Success = false, Message = "No cards found for this user.", Data = null };
+            }
+
+            foreach (var card in cards)
+            {
+                card.IsPaid = true;
+                card.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await dbContext.SaveChangesAsync();
+            return new Result<Card> { Success = true, Message = "Payment processed successfully.", Data = cards };
+        }
     }
 }

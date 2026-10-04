@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Project.DAL.Interfaces;
+using Project.Dal.Interfaces;
 using Project.Models;
 using System;
 using System.IdentityModel.Tokens.Jwt;
@@ -12,7 +12,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Project.DAL
+namespace Project.Dal
 {
     public class UserDal : IUserDal
     {
@@ -32,7 +32,8 @@ namespace Project.DAL
             logger.LogInformation("GetUserByEmail function");
             try
             {
-                return await dbContext.User.FirstOrDefaultAsync(u => u.Email == email);
+                return await dbContext.User.Include(u => u.Role)
+                    .FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
             }
 
             catch
@@ -40,6 +41,11 @@ namespace Project.DAL
                 logger.LogError("could not find check duplicate email");
                 return null;
             }
+        }
+
+        public async Task<Role?> GetRoleByName(string name)
+        {
+            return await dbContext.Role.FirstOrDefaultAsync(role => role.Name == name && role.IsActive);
         }
 
         public async Task<Result<User>> Register(User user)

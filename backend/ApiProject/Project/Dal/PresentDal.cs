@@ -1,13 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Project.DAL.Interfaces;
+using Project.Dal.Interfaces;
 using Project.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Project.DAL
+namespace Project.Dal
 {
     // מחלקת ה-DAL עבור מתנות
     public class PresentDal : IPresentDal
@@ -62,24 +62,42 @@ namespace Project.DAL
         }
 
         // צפייה ברשימת המתנות
-        public async Task<Result<Present>> GetAllPresentsAsync(bool onlyActive = true)
+        public async Task<Result<Present>> GetAllPresentsAsync(
+            bool onlyActive = true,
+            string? search = null,
+            int? categoryId = null,
+            string? sortBy = null,
+            string? sortDirection = null)
         {
             try
             {
-                // מבצעים חיפוש על טבלת המתנות, כולל המידע על התורם וקטגוריה (באמצעות Include)
-                // Using AsNoTracking for better performance and to avoid circular references
                 var query = dbContext.Present
                     .AsNoTracking()
-                    .Include(p => p.Donor)  // טוענים את פרטי התורם לכל מתנה
-                    .Include(p => p.Category)  // טוענים את פרטי הקטגוריה לכל מתנה
+                    .Where(p => p.IsActive && !p.IsDeleted)
                     .AsQueryable();
 
-                if (onlyActive)
+                if (!string.IsNullOrWhiteSpace(search))
                 {
-                    query = query.Where(p => p.IsActive);
+                    var searchPattern = $"%{search.Trim()}%";
+                    query = query.Where(p =>
+                        EF.Functions.Like(p.Name, searchPattern) ||
+                        (p.Description != null && EF.Functions.Like(p.Description, searchPattern)));
                 }
 
-                var presents = await query.ToListAsync();  // מבצעים את החיפוש בצורה אסינכרונית
+                if (categoryId.HasValue)
+                {
+                    query = query.Where(p => p.CategoryId == categoryId.Value);
+                }
+
+                query = sortBy switch
+                {
+                    "price" when sortDirection == "desc" => query.OrderByDescending(p => p.Price).ThenBy(p => p.Name),
+                    "price" => query.OrderBy(p => p.Price).ThenBy(p => p.Name),
+                    "name" when sortDirection == "desc" => query.OrderByDescending(p => p.Name),
+                    _ => query.OrderBy(p => p.Name)
+                };
+
+                var presents = await query.ToListAsync();
 
                 // תיעוד בלוג שהפונקציה הצליחה
                 logger.LogInformation("Fetched all presents successfully.");
@@ -88,7 +106,7 @@ namespace Project.DAL
                 {
                     Success = true,
                     Message = "Fetched all presents successfully.",
-                    Data = presents  // מחזירים את כל המתנות שנמצאו
+                    Data = presents
                 };
             }
             catch (Exception ex)
@@ -110,9 +128,7 @@ namespace Project.DAL
             try
             {
                 var present = await dbContext.Present
-                    .Include(p => p.Donor)
-                    .Include(p => p.Category)
-                    .FirstOrDefaultAsync(p => p.Id == id);
+                    .FirstOrDefaultAsync(p => p.Id == id && p.IsActive && !p.IsDeleted);
 
                 if (present == null)
                 {
@@ -185,7 +201,7 @@ namespace Project.DAL
             try
             {
                 // מחפשים את המתנה לפי ה-ID שלה
-                var present = await dbContext.Present.FindAsync(presentId);
+                var present = await dbContext.Present.FirstOrDefaultAsync(p => p.Id == presentId);
                 if (present == null)
                 {
                     // אם לא נמצאה מתנה עם ה-ID הזה, נרשום אזהרה בלוג
@@ -198,8 +214,11 @@ namespace Project.DAL
                     };
                 }
 
-                // Soft Delete: Set IsActive to false instead of removing the record
+                // Soft delete: retain the record for audit/history while excluding it from normal queries.
                 present.IsActive = false;
+                present.IsDeleted = true;
+                present.DeletedAt = DateTime.UtcNow;
+                present.UpdatedAt = DateTime.UtcNow;
                 dbContext.Present.Update(present);
                 await dbContext.SaveChangesAsync();  // שומרים את השינויים במסד הנתונים
 
@@ -246,7 +265,7 @@ namespace Project.DAL
 
                 p.Name = present.Name;
                 p.DonorId = present.DonorId;
-                p.Category = present.Category;
+                p.CategoryId = present.CategoryId;
                 p.Quantity = present.Quantity;
                 p.Price = present.Price;
                 p.Description = present.Description;
@@ -427,7 +446,7 @@ namespace Project.DAL
                 // Exclude inactive presents
                 var presents = await dbContext.Present
                     .Where(p => p.IsActive)
-                    .OrderBy(p => p.Category)  // מיון לפי קטגוריה
+                    .OrderBy(p => p.CategoryId)  // sort by the persisted category reference
                     .Include(p => p.Donor)  // כולל את המידע על התורם
                     .ToListAsync();
 

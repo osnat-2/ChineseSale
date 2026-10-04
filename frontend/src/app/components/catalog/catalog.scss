@@ -1,0 +1,23 @@
+.catalog-page { max-width: 1180px; margin: 0 auto; padding: 3rem 1.25rem 5rem; color: var(--color-text); }
+.catalog-header { border-inline-start: 2px solid var(--color-highlight); padding-inline-start: 1.1rem; margin-bottom: 2rem; }
+.eyebrow, .card-label { color: var(--color-highlight); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: .72rem; }
+.catalog-page h1 { max-width: 650px; margin: 0; font-size: clamp(2.25rem, 6vw, 4.8rem); font-weight: 600; letter-spacing: -.065em; line-height: 1; }
+.intro { color: var(--color-text-muted); font-size: 1.1rem; }
+.filters { display: grid; grid-template-columns: 2fr repeat(3, 1fr) auto; gap: .75rem; align-items: end; padding: 1rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); box-shadow: var(--shadow-float); }
+.filters label { display: grid; gap: .35rem; color: var(--color-text-muted); font-weight: 600; font-size: .85rem; }
+.filters input, .filters select { min-height: 2.75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); padding: .55rem .7rem; background: var(--color-surface-raised); color: var(--color-text); font: inherit; }
+.filters button { border-radius: var(--radius-sm); }
+.state { padding: 3rem 1rem; text-align: center; color: var(--color-text-muted); }
+.state-error { color: var(--color-danger); }
+.present-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-top: 2rem; }
+.present-card { overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-float); transition: border-color 160ms ease, box-shadow 160ms ease; }
+.present-card:hover { border-color: rgb(130 184 176 / 55%); box-shadow: var(--shadow-card); }
+.present-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--color-surface-raised); }
+.present-card-body { padding: 1.1rem; }
+.present-card h2 { margin: .35rem 0; color: var(--color-text); font-size: 1.35rem; letter-spacing: -.025em; }
+.present-card p { color: var(--color-text-muted); }
+.card-footer { display: flex; justify-content: space-between; gap: 1rem; align-items: center; margin-top: 1.2rem; }
+.card-footer strong { color: var(--color-highlight); }
+.card-footer a { color: var(--color-accent-strong); font-weight: 700; }
+@media (max-width: 800px) { .filters { grid-template-columns: 1fr 1fr; } .filters button { grid-column: 1 / -1; } }
+@media (max-width: 480px) { .filters { grid-template-columns: 1fr; } }

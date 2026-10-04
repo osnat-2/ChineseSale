@@ -1,0 +1,29 @@
+<section class="management-page">
+  <header>
+    <p class="eyebrow">{{ 'management.purchaseEyebrow' | translate }}</p>
+    <h1>{{ 'management.purchaseTitle' | translate }}</h1>
+  </header>
+
+  <div *ngIf="purchases.length === 0" class="empty-state">
+    {{ 'management.purchaseEmpty' | translate }}
+  </div>
+
+  <table *ngIf="purchases.length > 0">
+    <thead>
+      <tr>
+        <th>{{ 'management.customer' | translate }}</th>
+        <th>{{ 'management.ticket' | translate }}</th>
+        <th>{{ 'management.total' | translate }}</th>
+        <th>{{ 'management.status' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let purchase of purchases">
+        <td>{{ purchase.customer }}</td>
+        <td>{{ purchase.ticket }}</td>
+        <td>{{ purchase.total | localizedCurrency:'ILS' }}</td>
+        <td>{{ purchase.status }}</td>
+      </tr>
+    </tbody>
+  </table>
+</section>

@@ -1,14 +1,16 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Project.Attributes;
-using Project.BLL.Interfaces;
+using Project.Bll.Interfaces;
+using Project.Dto;
 using Project.Models;
-using Project.Models.ModelsDTO;
+using System.Security.Claims;
 
 namespace Project.Controllers
 {
     [ApiController]
-    [Route("api/card/[controller]/")]
+    [Route("api/card")]
+    [Authorize]
     public class CardController : ControllerBase
     {
         ICardService _cardService;
@@ -25,10 +27,27 @@ namespace Project.Controllers
         //}
 
         //[RaffleBlock]
-        [HttpPost("AddCard")]
+        [HttpPost]
         public async Task<Result<Card>> AddCard(CardDto cardDto)
         {
-            return await _cardService.AddCard(cardDto);
+            return await _cardService.AddCard(cardDto, GetUserId());
+        }
+
+        [HttpGet("my")]
+        public async Task<Result<Card>> GetMyCards([FromQuery] bool? paid = null) =>
+            await _cardService.GetCardsByUserAsync(GetUserId(), paid);
+
+        [HttpDelete("{id:int}")]
+        public async Task<Result<Card>> DeleteCard(int id) =>
+            await _cardService.DeleteCardAsync(id, GetUserId());
+
+        [HttpPost("payment")]
+        public async Task<Result<Card>> ProcessPayment() =>
+            await _cardService.ProcessPaymentAsync(GetUserId());
+
+        private int GetUserId()
+        {
+            return int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) ? userId : 0;
         }
 
         ////[Authorize(Roles = "Manager")]

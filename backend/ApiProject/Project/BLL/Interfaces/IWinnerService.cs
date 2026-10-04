@@ -1,10 +1,10 @@
 ﻿using Project.Models;
 
-namespace Project.BLL.Interfaces
+namespace Project.Bll.Interfaces
 {
     public interface IWinnerService
     {
-        //Task<Result<Winner>> DrawWinnerForPresentAsync(int presentId);
+        Task<Result<Winner>> DrawWinnerForPresentAsync(int presentId, int? lotteryId = null);
         //Task<Result<Dictionary<Present, List<User>>>> GetPresentsWithUsersAsync();
         //Task<decimal> CalculateTotalIncomeForPresentAsync();
         //Task<Result<string>> SendWinnerEmailAsync();

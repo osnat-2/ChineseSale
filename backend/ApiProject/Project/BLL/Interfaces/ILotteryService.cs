@@ -1,7 +1,6 @@
 ﻿using Project.Models;
-using Project.Models.ModelsDTO;
 
-namespace Project.BLL.Interfaces
+namespace Project.Bll.Interfaces
 {
     public interface ILotteryService
     {

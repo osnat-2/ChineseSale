@@ -1,13 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Project.DAL.Interfaces;
+using Project.Dal.Interfaces;
 using Project.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Project.DAL
+namespace Project.Dal
 {
     public class CategoryDal : ICategoryDal
     {
@@ -72,7 +72,7 @@ namespace Project.DAL
                     };
                 }
 
-                var category = await dbContext.Category.FindAsync(id);
+                var category = await dbContext.Category.FirstOrDefaultAsync(c => c.Id == id);
 
                 if (category == null)
                 {
@@ -309,8 +309,11 @@ namespace Project.DAL
                     };
                 }
 
-                // Soft delete: mark as inactive instead of hard delete
+                // Soft delete: retain the record for audit/history while excluding it from normal queries.
                 category.IsActive = false;
+                category.IsDeleted = true;
+                category.DeletedAt = DateTime.UtcNow;
+                category.UpdatedAt = DateTime.UtcNow;
                 dbContext.Category.Update(category);
                 await dbContext.SaveChangesAsync();
 

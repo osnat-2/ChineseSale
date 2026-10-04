@@ -1,1 +1,10 @@
-<p>personal-area works!</p>
+<main class="purchase-page">
+	<a routerLink="/home">{{ 'personal.back' | translate }}</a>
+	<h1>{{ 'personal.title' | translate }}</h1>
+	<p *ngIf="loading" role="status">{{ 'personal.loading' | translate }}</p>
+	<p *ngIf="errorMessage" role="alert">{{ errorMessage | translate }}</p>
+	<p *ngIf="!loading && !errorMessage && cards.length === 0">{{ 'personal.empty' | translate }}</p>
+	<ul *ngIf="!loading && cards.length">
+		<li *ngFor="let card of cards">{{ 'personal.reference' | translate:{cardId: card.id, presentId: card.presentId} }}</li>
+	</ul>
+</main>

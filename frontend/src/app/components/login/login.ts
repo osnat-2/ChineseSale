@@ -2,12 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { UserService } from '../../services/userService/user-service';
 import { HttpService } from '../../services/httpService/http-service';
+import { AuthService } from '../../services/authService/auth-service';
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
@@ -16,6 +18,7 @@ export class Login implements OnInit {
   userService: UserService = inject(UserService);
   router: Router = inject(Router);
   fb: FormBuilder = inject(FormBuilder);
+  authService: AuthService = inject(AuthService);
 
   loginForm!: FormGroup;
   errorMessage: string = '';
@@ -34,7 +37,7 @@ export class Login implements OnInit {
 
   login(): void {
     if (this.loginForm.invalid) {
-      this.errorMessage = 'Please fill in all required fields correctly.';
+      this.errorMessage = 'auth.invalidForm';
       return;
     }
 
@@ -45,9 +48,13 @@ export class Login implements OnInit {
     this.userService.login(email, password).subscribe({
       next: (response) => {
         this.isLoading = false;
-        this.httpService.router.navigate(['/home']);
-        if (response?.isSuccess === false) {
-          this.errorMessage = response?.message || 'Login failed.';
+        if (response?.success !== true || typeof response?.message !== 'string') {
+          this.errorMessage = response?.message || 'auth.loginFailed';
+          return;
+        }
+        this.authService.setToken(response.message);
+        if (!this.authService.isAuthenticated()) {
+          this.errorMessage = 'auth.invalidToken';
           return;
         }
         this.router.navigate(['/home']);
@@ -55,7 +62,7 @@ export class Login implements OnInit {
       error: (error) => {
         this.isLoading = false;
         this.errorMessage =
-          error?.error?.message || error?.message || 'Login failed. Please try again.';
+          error?.error?.message || error?.message || 'auth.loginTryAgain';
       },
     });
   }

@@ -1,4 +1,5 @@
-export class cardModel {
+export class lotteryModel {
     id!: number;
-    year!: Date
+    time!: string;
+    isMadeOut!: boolean;
 }

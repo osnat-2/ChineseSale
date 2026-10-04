@@ -1,0 +1,23 @@
+.winner-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+.page-header { margin-bottom: 2rem; }
+.winner-page .eyebrow { color: var(--color-highlight); font-size: .72rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.winner-page h1, .winner-page h2, .winner-page p { margin-top: 0; }
+.winner-page h1 { color: var(--color-text); font-size: clamp(2rem, 5vw, 3.5rem); margin-bottom: .75rem; letter-spacing: -.05em; }
+.intro, .present-row p { color: var(--color-text-muted); }
+.draw-layout { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1.6fr) minmax(240px, .8fr); }
+.present-list { display: grid; gap: .75rem; }
+.present-row, .winner-result { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 1.25rem; background: var(--color-surface); box-shadow: var(--shadow-float); }
+.present-row { align-items: center; display: flex; gap: 1rem; justify-content: space-between; }
+.present-row.drawn { border-color: rgb(155 210 173 / 48%); background: var(--color-success-surface); }
+.present-row h2, .winner-result h2 { color: var(--color-text); font-size: 1.1rem; margin-bottom: .35rem; }
+.winner-page button { border: 1px solid transparent; border-radius: var(--radius-sm); color: #0b1514; cursor: pointer; font-weight: 700; min-width: 125px; padding: .7rem .9rem; }
+.winner-page button:disabled { border-color: var(--color-border); background: var(--color-surface-hover); color: var(--color-text-muted); cursor: not-allowed; }
+.winner-result { align-self: start; background: linear-gradient(150deg, #1b242a, #12161b); border-color: #3b454c; color: var(--color-text); }
+.winner-result .eyebrow { color: var(--color-highlight); }
+.winner-page dl { margin: 1.5rem 0 0; }
+.winner-page dl div { border-top: 1px solid var(--color-border); display: flex; justify-content: space-between; gap: 1rem; padding: .75rem 0; }
+.winner-page dt { color: var(--color-text-muted); } .winner-page dd { font-weight: 700; margin: 0; }
+.winner-page .state-message { border-radius: var(--radius-sm); margin-bottom: 1rem; padding: .9rem 1rem; background: var(--color-surface); color: var(--color-text-muted); }
+.winner-page .state-message.error { background: var(--color-danger-surface); color: var(--color-danger); }
+.winner-page .state-message.success { background: var(--color-success-surface); color: var(--color-success); }
+@media (max-width: 700px) { .draw-layout { grid-template-columns: 1fr; } .present-row { align-items: stretch; flex-direction: column; } .winner-page button { width: 100%; } }

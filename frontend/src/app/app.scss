@@ -84,3 +84,6 @@
     }
   }
 }
+.app-content {
+  min-height: calc(100vh - var(--nav-height));
+}

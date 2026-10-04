@@ -12,7 +12,7 @@ Own the customer card/purchase/payment journey. Real-money provider integration 
 ## Required Analysis
 
 - Read root `plan.md`, Contract Baseline and Auth handoffs, and relevant frontend instructions.
-- Trace Card controller, BLL, DAL, entity, context, migration, DTO/profile, and Angular card/payment/personal-area code.
+- Trace Card controller, Bll, DAL, entity, context, migration, DTO/profile, and Angular card/payment/personal-area code.
 - Verify authenticated user ownership, quantity semantics, availability, duplicate requests, and paid-state persistence.
 - Identify whether server-controlled development payment can be implemented without model/schema changes.
 - Never accept client-side `IsPaid` as payment proof.

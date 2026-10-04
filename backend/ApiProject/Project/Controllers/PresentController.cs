@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Project.BLL.Interfaces;
+using Project.Bll.Interfaces;
+using Project.Dto;
 using Project.Models;
-using Project.Models.ModelsDTO;
 
 namespace Project.Controllers
 {
@@ -25,9 +25,14 @@ namespace Project.Controllers
         }
 
         [HttpGet("getAllPresents")]
-        public async Task<Result<Present>> GetAllPresentsAsync([FromQuery] bool onlyActive = true)
+        public async Task<Result<Present>> GetAllPresentsAsync(
+            [FromQuery] bool onlyActive = true,
+            [FromQuery] string? search = null,
+            [FromQuery] int? categoryId = null,
+            [FromQuery] string? sortBy = null,
+            [FromQuery] string? sortDirection = null)
         {
-            return await _presentService.GetAllPresentsAsync(onlyActive);
+            return await _presentService.GetAllPresentsAsync(onlyActive, search, categoryId, sortBy, sortDirection);
         }
 
 

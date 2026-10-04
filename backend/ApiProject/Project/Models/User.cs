@@ -19,9 +19,9 @@ namespace Project.Models
         [MaxLength(18)]
         [MinLength(4)]
         public string? Password { get; set; } = "";
-        // [Required]
+        [Required]
         // [DefaultValue("User")]
-        // public int RoleId { get; set; }
-        // public Role Role { get; set; }
+        public int RoleId { get; set; }
+        public Role Role { get; set; }
     }
 }

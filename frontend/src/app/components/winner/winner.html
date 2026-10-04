@@ -1,0 +1,38 @@
+<section class="winner-page">
+	<header class="page-header">
+		<p class="eyebrow">{{ 'winner.eyebrow' | translate }}</p>
+		<h1>{{ 'winner.title' | translate }}</h1>
+		<p class="intro">{{ 'winner.intro' | translate }}</p>
+	</header>
+
+	<div *ngIf="loading" class="state-message">{{ 'winner.loading' | translate }}</div>
+	<div *ngIf="errorMessage" class="state-message error" role="alert">{{ errorMessage | translate }}</div>
+	<div *ngIf="successMessage" class="state-message success" role="status">{{ successMessage | translate }}</div>
+
+	<div *ngIf="!loading && presents.length === 0" class="state-message">{{ 'winner.empty' | translate }}</div>
+
+	<div *ngIf="!loading && presents.length > 0" class="draw-layout">
+		<div class="present-list">
+			<article *ngFor="let present of presents" class="present-row" [class.drawn]="isDrawn(present.id)">
+				<div>
+					<h2>{{ present.name }}</h2>
+					<p>{{ present.description || ('winner.noDescription' | translate) }}</p>
+				</div>
+				<button type="button" (click)="selectedPresentId = present.id; drawSelected()"
+					[disabled]="drawing || isDrawn(present.id)" [attr.aria-label]="'winner.drawFor' | translate:{name: present.name}">
+					{{ isDrawn(present.id) ? ('winner.completed' | translate) : drawing && selectedPresentId === present.id ? ('winner.drawing' | translate) : ('winner.draw' | translate) }}
+				</button>
+			</article>
+		</div>
+
+		<aside *ngIf="latestWinner" class="winner-result" aria-live="polite">
+			<p class="eyebrow">{{ 'winner.latest' | translate }}</p>
+			<h2>{{ 'winner.persisted' | translate }}</h2>
+			<dl>
+				<div><dt>{{ 'winner.present' | translate }}</dt><dd><bdi>#{{ latestWinner.presentId }}</bdi></dd></div>
+				<div><dt>{{ 'winner.card' | translate }}</dt><dd><bdi>#{{ latestWinner.cardId }}</bdi></dd></div>
+				<div><dt>{{ 'winner.lottery' | translate }}</dt><dd><bdi>#{{ latestWinner.lotteryId }}</bdi></dd></div>
+			</dl>
+		</aside>
+	</div>
+</section>

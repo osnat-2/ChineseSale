@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { DonatorService } from './donor-service';
+import { DonorService } from './donor-service';
 
-describe('DonatorService', () => {
-  let service: DonatorService;
+describe('DonorService', () => {
+  let service: DonorService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(DonatorService);
+    service = TestBed.inject(DonorService);
   });
 
   it('should be created', () => {

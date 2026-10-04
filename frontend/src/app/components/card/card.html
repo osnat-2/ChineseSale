@@ -1,0 +1,20 @@
+<main class="purchase-page">
+	<a routerLink="/catalog">{{ 'card.back' | translate }}</a>
+	<h1>{{ 'card.title' | translate }}</h1>
+	<form (ngSubmit)="addCard()">
+		<label for="presentId">{{ 'card.presentNumber' | translate }}</label>
+		<input id="presentId" name="presentId" type="number" min="1" [(ngModel)]="presentId" required>
+		<button type="submit" [disabled]="submitting || !presentId">{{ submitting ? ('card.adding' | translate) : ('card.add' | translate) }}</button>
+	</form>
+	<p *ngIf="loading" role="status">{{ 'card.loading' | translate }}</p>
+	<p *ngIf="errorMessage" role="alert">{{ errorMessage | translate }}</p>
+	<p *ngIf="successMessage" role="status">{{ successMessage | translate }}</p>
+	<p *ngIf="!loading && !errorMessage && cards.length === 0">{{ 'card.empty' | translate }}</p>
+	<ul *ngIf="!loading && cards.length">
+		<li *ngFor="let card of cards">
+			{{ 'card.reference' | translate:{cardId: card.id, presentId: card.presentId} }}
+			<button type="button" (click)="removeCard(card)" [disabled]="submitting">{{ 'card.remove' | translate }}</button>
+		</li>
+	</ul>
+	<a routerLink="/payment">{{ 'card.checkout' | translate }}</a>
+</main>
