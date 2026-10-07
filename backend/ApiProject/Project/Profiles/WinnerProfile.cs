@@ -15,7 +15,6 @@ public class WinnerProfile : Profile
             .ForMember(destination => destination.CreatedAt, options => options.Ignore())
             .ForMember(destination => destination.UpdatedAt, options => options.Ignore())
             .ForMember(destination => destination.CreatedBy, options => options.Ignore())
-            .ForMember(destination => destination.CreatedByUser, options => options.Ignore())
             .ForMember(destination => destination.Present, options => options.Ignore())
             .ForMember(destination => destination.Card, options => options.Ignore())
             .ForMember(destination => destination.Lottery, options => options.Ignore());

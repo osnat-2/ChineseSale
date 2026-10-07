@@ -9,5 +9,8 @@ namespace Project.Bll.Interfaces
         Task<Result<User>> Register(UserDto userDto);
         Task<Result<User>> AddDonor(UserDto userDto);
         Task<Result<User>> AddAdmin(UserDto userDto);
+        Task<Result<User>> GetDonorsAsync();
+        Task<Result<User>> UpdateDonorAsync(int id, DonorUpdateDto donorDto);
+        Task<Result<User>> DeleteDonorAsync(int id);
     }
 }

@@ -15,6 +15,5 @@ namespace Project.Models
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public int CreatedBy { get; set; }
-        public User CreatedByUser { get; set; }
     }
 }

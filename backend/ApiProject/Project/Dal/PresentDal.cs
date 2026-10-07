@@ -33,7 +33,7 @@ namespace Project.Dal
         {
             try
             {
-                var query = dbContext.Present.Where(p => p.Name.ToLower() == name.ToLower());
+                var query = dbContext.Present.Where(p => p.Name == name);
                 
                 if (excludePresentId.HasValue)
                 {
@@ -51,13 +51,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error checking if present name '{name}' exists.");
-                return new Result<bool>
-                {
-                    Success = false,
-                    Message = $"Error checking duplicate name: {ex.Message}",
-                    Data = new List<bool> { false }
-                };
+                logger.LogError(ex, "Error checking for a duplicate present name.");
+                throw;
             }
         }
 
@@ -73,8 +68,11 @@ namespace Project.Dal
             {
                 var query = dbContext.Present
                     .AsNoTracking()
-                    .Where(p => p.IsActive && !p.IsDeleted)
                     .AsQueryable();
+                if (onlyActive)
+                {
+                    query = query.Where(p => p.IsActive);
+                }
 
                 if (!string.IsNullOrWhiteSpace(search))
                 {
@@ -111,14 +109,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                // במקרה של שגיאה, נתעד את השגיאה בלוג
                 logger.LogError(ex, "Error fetching all presents.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = "Error fetching all presents: " + ex.Message,
-                    Data = Enumerable.Empty<Present>()  // מחזירים רשימה ריקה במקרה של שגיאה
-                };
+                throw;
             }
         }
 
@@ -151,13 +143,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error fetching present with ID {id}.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = $"Error fetching present with ID {id}: {ex.Message}",
-                    Data = Enumerable.Empty<Present>()
-                };
+                logger.LogError(ex, "Error fetching present.");
+                throw;
             }
         }
 
@@ -172,7 +159,7 @@ namespace Project.Dal
                 await dbContext.SaveChangesAsync();  // שומרים את השינויים במסד הנתונים
 
                 // תיעוד בלוג על הצלחה בהוספת המתנה
-                logger.LogInformation($"Present '{present.Name}' added successfully.");
+                logger.LogInformation("Present added successfully.");
 
                 return new Result<Present>
                 {
@@ -183,14 +170,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                // במקרה של שגיאה, נתעד את השגיאה בלוג
                 logger.LogError(ex, "Error adding present.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = $"Error adding present: {ex.Message}",
-                    Data = null
-                };
+                throw;
             }
         }
 
@@ -234,14 +215,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                // במקרה של שגיאה, נתעד את השגיאה בלוג
-                logger.LogError(ex, $"Error deleting present with ID {presentId}.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = $"Error deleting present with ID {presentId}: {ex.Message}",
-                    Data = null
-                };
+                logger.LogError(ex, "Error deleting present.");
+                throw;
             }
         }
 
@@ -269,12 +244,14 @@ namespace Project.Dal
                 p.Quantity = present.Quantity;
                 p.Price = present.Price;
                 p.Description = present.Description;
+                p.ImageUrl = present.ImageUrl;
+                p.UpdatedAt = DateTime.UtcNow;
                 // מעדכנים את פרטי המתנה במסד הנתונים
                 dbContext.Present.Update(p);
                 await dbContext.SaveChangesAsync();  // שומרים את השינויים
 
                 // תיעוד בלוג על הצלחה בעדכון המתנה
-                logger.LogInformation($"Present '{present.Name}' updated successfully.");
+                logger.LogInformation("Present updated successfully.");
 
                 return new Result<Present>
                 {
@@ -285,14 +262,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                // במקרה של שגיאה, נתעד את השגיאה בלוג
-                logger.LogError(ex, $"Error updating present with ID {present.Id}.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = $"Error updating present with ID {present.Id}: {ex.Message}",
-                    Data = null
-                };
+                logger.LogError(ex, "Error updating present.");
+                throw;
             }
         }
 
@@ -317,13 +288,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error fetching presents by name {name}.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = $"Error fetching presents by name {name}: {ex.Message}",
-                    Data = Enumerable.Empty<Present>()  // מחזירים רשימה ריקה במקרה של שגיאה
-                };
+                logger.LogError(ex, "Error fetching presents by name.");
+                throw;
             }
         }
 
@@ -349,13 +315,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error fetching presents by donor name {donorName}.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = $"Error fetching presents by donor name {donorName}: {ex.Message}",
-                    Data = Enumerable.Empty<Present>()  // מחזירים רשימה ריקה במקרה של שגיאה
-                };
+                logger.LogError(ex, "Error fetching presents by donor name.");
+                throw;
             }
         }
 
@@ -391,13 +352,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error fetching presents by buyer count {buyerCount}.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = $"Error fetching presents by buyer count {buyerCount}: {ex.Message}",
-                    Data = Enumerable.Empty<Present>()  // מחזירים רשימה ריקה במקרה של שגיאה
-                };
+                logger.LogError(ex, "Error fetching presents by buyer count.");
+                throw;
             }
         }
 
@@ -426,14 +382,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                // במקרה של שגיאה, נתעד את השגיאה בלוג
                 logger.LogError(ex, "Error fetching presents ordered by price.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = "Error fetching presents ordered by price: " + ex.Message,
-                    Data = Enumerable.Empty<Present>()  // מחזירים רשימה ריקה במקרה של שגיאה
-                };
+                throw;
             }
         }
 
@@ -462,14 +412,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                // במקרה של שגיאה, נתעד את השגיאה בלוג
                 logger.LogError(ex, "Error fetching presents ordered by category.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = "Error fetching presents ordered by category: " + ex.Message,
-                    Data = Enumerable.Empty<Present>()  // מחזירים רשימה ריקה במקרה של שגיאה
-                };
+                throw;
             }
         }
 
@@ -497,12 +441,7 @@ namespace Project.Dal
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error fetching presents with winner info.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = "Error fetching presents with winner info: " + ex.Message,
-                    Data = Enumerable.Empty<Present>()
-                };
+                throw;
             }
         }
 //*** End Patch
@@ -527,12 +466,7 @@ namespace Project.Dal
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error fetching all presents without includes.");
-                return new Result<Present>
-                {
-                    Success = false,
-                    Message = "Error fetching all presents without includes: " + ex.Message,
-                    Data = Enumerable.Empty<Present>()
-                };
+                throw;
             }
         }
 

@@ -22,7 +22,7 @@ Build a complete Chinese sale web application with the existing ASP.NET Core API
 | 2. Auth | `auth` | Implemented: JWT state, interceptor, guards, active endpoint authorization; donor/admin role persistence deferred | Approved |
 | 3. Catalog | `catalog` | Implemented: public read-only catalogue, typed services, filters, details, and focused tests | Approved |
 | 4. Purchase/Payment | `purchase-payment` | Implemented: server-owned card lifecycle, owner history, development payment, guarded personal area, and focused UI tests | Approved |
-| 5. Admin | `admin` | Implemented: admin dashboard shell and management placeholders with empty-state handling; backend-owned data remains deferred to verified API calls | Approved |
+| 5. Admin | `admin` | Expanded: server-backed present/donor CRUD, confirmed soft deletes, and lottery execution/results in management views | Approved |
 | 6. Lottery | `lottery` | Implemented: server-side draw validation, no-paid-card friendly failure, and atomic winner+lottery completion persistence | Approved |
 | 7. Verification | Main workflow | Completed with documented residual risks | Approved |
 
@@ -304,9 +304,18 @@ Completed on 2026-09-16 after explicit approval of the Phase 5 sub-plan.
 
 ### Residual Risks and Explicit Deferrals
 
-- The management views are shell-level and must be connected to real backend list/create/update/delete endpoints when the corresponding admin API contract is approved and implemented.
-- Donor list and purchase/winner data remain intentionally server-backed only; no fabricated records are displayed.
-- No model or migration files were changed during this phase.
+- Purchase history and historical winner listing remain deferred because those read APIs are not available; the lottery view displays the persisted result from the current draw.
+- Donor deletion is a soft delete that preserves existing present references. No donor table, model, or migration was added.
+- No database migration, database update, or live end-to-end database journey was run.
+
+### Management UI Expansion — 2026-10-06
+
+- Connected `/admin/presents` to the present read/create/update/soft-delete APIs. Added validation-matched forms, donor/category selection, price editing, list refresh after writes, and per-item confirmation.
+- Added Admin-only donor list/update/soft-delete endpoints over existing `User` records with the `Donor` role. Donor creation reuses the existing Admin-only `/api/auth/addDonor` endpoint and its required initial-password contract. Responses use the password-free `UserResponseDto`. Deletion is rejected while a non-deleted present references the donor.
+- Added the present price to `PresentDto`, honored `onlyActive=false` for admin listing, initialized new presents as active, and persisted edited image URLs and prices.
+- Connected `/admin/winners` to the existing Admin-only persisted `/api/lottery/draw/{presentId}` endpoint, with a permanently visible Create Lottery action, present selection, and result/error states.
+- Added focused Angular management/service tests and backend donor/present/DTO tests. Angular management/service tests passed 17/17; backend tests passed 31/31 when excluding the unrelated `UserPasswordStorageTests` assertion that expects a 60-character password column while the current worktree uses 255. The full backend suite otherwise passed 31/32.
+- Angular production build passed with the existing unused-import and bundle-budget warnings. No model or migration files were modified.
 
 ## Phase 6: Lottery
 
@@ -338,9 +347,9 @@ Completed on 2026-09-16 after explicit approval of the Phase 7 verification sub-
 #### Residual risks and deferred requirements
 
 - `appsettings.Development.json` still contains environment-specific JWT and SQL connection settings, and the frontend API base URL remains hardcoded to `https://localhost:7142/api/`. These require deployment/runtime configuration work before release.
-- Donor management remains a deliberate `501 Not Implemented` placeholder in `DonorController`.
+- Donor management CRUD is now available through Admin-only donor endpoints backed by role-filtered `User` records; no separate donor entity or schema change was introduced.
 - Present duplicate-name validation exists, but duplicate present-number validation cannot be implemented because the current `Present` model has no number field. Any number field/schema change requires separate explicit model and migration approval.
-- The default `Present.Price` is initialized to 10 in the entity, but the DTO/service contract does not explicitly resolve an omitted price; this remains a business-rule follow-up.
+- `Present.Price` remains integer-valued with a default of 10; the present request DTO now carries the value for management create/update.
 - No database migration, database update, or live end-to-end journey was run during this verification pass.
 
 ## Decisions
@@ -467,3 +476,89 @@ This is an additive frontend design phase. Existing requirements, decisions, pha
 - Review the existing bundle budget and remove unused `RouterLink` imports as separate cleanup work; neither prevents this phase from building.
 - Re-run the frontend smoke check with the backend running to verify populated catalogue/detail and authenticated/admin screens with live data.
 - No backend, API, database, dependency-manifest, or business-rule changes were made for this phase.
+
+## Auth and API Result Contract Follow-up (2026-10-04)
+
+- Updated the Angular auth interceptor to attach the current JWT to requests targeting the configured API base, excluding the anonymous login and registration endpoints. A 401 from an authenticated API request clears auth state and returns the user to login.
+- Made API JSON camel-case serialization explicit and aligned the backend `Result<T>` nullable `Message`/`Data` contract with the Angular result model. Login and registration now consume typed `Result` responses and check the shared `success` field.
+- Added interceptor regression coverage for authenticated API calls, login/register exclusions, non-API requests, and unauthorized responses.
+
+Validation:
+
+- Focused Angular interceptor tests: 4 passed.
+- `npm run build` from `frontend`: passed; existing unused-import and initial bundle-budget warnings remain.
+- `dotnet build Project\Project.csproj --no-restore -p:OutDir=<isolated-output> -p:UseAppHost=false` from `backend/ApiProject`: passed with 0 errors and 2 package vulnerability warnings. An initial standard-output build could not copy the API DLL because running API processes held the output file; the isolated-output build verified compilation without stopping those processes.
+- No database or migration operations were run.
+
+## Login Request Body Follow-up (2026-10-04)
+
+- Added a dedicated backend `LoginRequestDto` with required email/password validation and changed `POST /api/auth/login` to bind credentials from JSON request body rather than query parameters.
+- Updated the Angular login service/component to send a typed credentials object in the POST body. The existing camel-case `Result<string>` response and JWT flow are unchanged.
+- Added a focused Angular service test verifying that credentials are sent in the request body and the login URL has no query parameters.
+
+Validation:
+
+- Focused UserService tests: 2 passed.
+- Backend API project build to an isolated output directory: passed with 0 errors and 40 warnings, including existing nullable warnings and NuGet vulnerability advisories.
+- No database or migration operations were run.
+
+## DAL Name Comparison Performance Follow-up (2026-10-04)
+
+- Replaced database-side `ToLower()` comparisons in present and category duplicate-name checks with direct string equality. Existing exclude-ID filters and duplicate-check flow are unchanged.
+- This leaves equality semantics to the configured SQL Server column collation. The live database collation was not inspected, so verify that it matches the intended case-sensitivity policy before deployment.
+- No model, migration, index, or database changes were made.
+
+Validation:
+
+- Backend API build to an isolated output directory: passed with 0 errors; existing package and nullable warnings remain.
+- Existing backend test project: 2 passed, 0 failed using an isolated output directory. These are lottery persistence tests; no name-collation integration test exists.
+- A source search confirmed no `ToLower()` or `ToUpper()` remains in the backend DAL.
+- The standard-output test build could not copy files because running API processes held the normal build output; validation was repeated successfully with isolated output directories without stopping those processes.
+
+## Audit Finding Remediation (2026-10-04)
+
+Completed the explicitly approved remediation scope for H-01 and M-02 through M-05.
+
+- H-01: Added `UserResponseDto` and projected registration, donor-creation, and admin-creation results to safe user fields only. Password hashes are not part of the response contract. Added controller coverage for all three operations.
+- M-02: Added server-side Data Annotations for user, present, category, and card request DTOs. Removed client-facing `RoleId` from `UserDto`; server-side role assignment remains authoritative. Present quantity is now required to be at least one in both DTO validation and service validation.
+- M-03: Increased the `User.Password` storage annotation to 60 characters, matching the encoded BCrypt hash length. Raw registration password limits remain on `UserDto`.
+- M-04/M-05: Added global exception middleware returning generic Problem Details with a trace ID and logging exception details server-side. Category, present, and user DAL exceptions now propagate to that boundary instead of returning exception text. Removed local category-controller exception responses that disclosed exception details. Request logging no longer records identity names or raw paths; authentication logs no longer include email addresses. Serilog console/file output now includes timestamp, level, source context, message, and exception.
+- Added focused backend tests for safe user responses, DTO constraints, BCrypt storage length, and sanitized global error responses.
+
+### Validation
+
+- H-01 focused backend test run: 5 passed, 0 failed.
+- M-02 focused backend test run: 9 passed, 0 failed.
+- M-03 focused backend test run: 10 passed, 0 failed.
+- M-04/M-05 focused backend test run passed after correcting the Problem Details content type assertion.
+- Final backend test project: 12 passed, 0 failed.
+- Final API build (`dotnet build backend/ApiProject/Project/Project.csproj --no-restore` with isolated output): succeeded with 0 errors and 2 existing NuGet vulnerability warnings (AutoMapper and Newtonsoft.Json).
+- No frontend build was required; no client code was changed.
+- No migration generation or database operation was run.
+
+### Remaining Follow-up
+
+- The `User.Password` model annotation changes EF's intended column length, but no migration was generated or applied. Verify the deployed column and prepare/apply an explicitly approved migration after the connection-string prerequisite is resolved.
+- The audit's configuration-secrets finding (M-01) was outside this approved remediation scope and remains to be verified/remediated separately.
+
+## Backend Role Management and Startup Seeding
+
+Completed after explicit approval to include full role-model CRUD APIs.
+
+- Added `IRoleService`/`RoleService` and `IRoleDal`/`RoleDal`. Startup seeds `User`, `Donor`, and `Admin`, creates missing roles, and reactivates existing inactive or soft-deleted built-ins while preserving their descriptions and creation metadata.
+- Registered the role DAL and service in `Program.cs` and run seeding in an async dependency-injection scope before the API begins accepting requests. Startup errors are allowed to surface.
+- Added `RoleDto` and Admin-only `api/role` list, get-by-ID, create, update, and soft-delete endpoints. Role reads include inactive, non-deleted roles.
+- Built-in roles cannot be renamed, deactivated, or deleted. The API rejects deactivating or deleting any role assigned to a user, including soft-deleted users. New roles record the authenticated admin's user ID as `CreatedBy`.
+- Custom role CRUD manages role definitions only; existing user-role assignment behavior remains unchanged. No model, migration, or database-update changes were made.
+
+Validation:
+
+- Backend solution build succeeded with 0 errors using `dotnet build Project.sln -p:UseAppHost=false`. The default apphost output was locked by an already-running API process; no process was stopped. Existing AutoMapper and Newtonsoft.Json vulnerability warnings remain.
+- Focused role tests passed: 10 passed, 0 failed. They were run with an isolated output directory because the running API also locked its regular project output.
+- Static diagnostics found no errors in the role implementation or tests. The backend DAL search confirms this addition introduces no `ToLower()`/`ToUpper()` calls.
+- No database connection, migration generation, or database update was performed.
+- Repository-wide `git diff --check` still reports a trailing-whitespace line in the already-modified `Project/Profiles/CategoryProfile.cs`; that unrelated line was left untouched.
+
+Residual risk:
+
+- Role-name uniqueness is checked case-insensitively in application code because the current schema has no unique role-name constraint. Concurrent role creation or simultaneous first-time seeding across multiple API instances could race; adding a database uniqueness constraint requires a separately approved migration.

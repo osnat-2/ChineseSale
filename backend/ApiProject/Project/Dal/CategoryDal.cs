@@ -48,12 +48,7 @@ namespace Project.Dal
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error fetching all categories.");
-                return new Result<Category>
-                {
-                    Success = false,
-                    Message = $"Error fetching all categories: {ex.Message}",
-                    Data = Enumerable.Empty<Category>()
-                };
+                throw;
             }
         }
 
@@ -96,13 +91,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error fetching category with ID {id}.");
-                return new Result<Category>
-                {
-                    Success = false,
-                    Message = $"Error fetching category: {ex.Message}",
-                    Data = null
-                };
+                logger.LogError(ex, "Error fetching category.");
+                throw;
             }
         }
 
@@ -121,7 +111,7 @@ namespace Project.Dal
                     };
                 }
 
-                var query = dbContext.Category.Where(c => c.Name.ToLower() == name.ToLower());
+                var query = dbContext.Category.Where(c => c.Name == name);
 
                 if (excludeCategoryId.HasValue)
                 {
@@ -139,13 +129,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error checking if category name '{name}' exists.");
-                return new Result<bool>
-                {
-                    Success = false,
-                    Message = $"Error checking duplicate name: {ex.Message}",
-                    Data = new List<bool> { false }
-                };
+                logger.LogError(ex, "Error checking for a duplicate category name.");
+                throw;
             }
         }
 
@@ -166,7 +151,7 @@ namespace Project.Dal
 
                 // Check for duplicate name
                 var nameExists = await dbContext.Category
-                    .AnyAsync(c => c.Name.ToLower() == category.Name.ToLower());
+                    .AnyAsync(c => c.Name == category.Name);
 
                 if (nameExists)
                 {
@@ -181,7 +166,7 @@ namespace Project.Dal
                 await dbContext.Category.AddAsync(category);
                 await dbContext.SaveChangesAsync();
 
-                logger.LogInformation($"Category '{category.Name}' created successfully.");
+                logger.LogInformation("Category created successfully.");
 
                 return new Result<Category>
                 {
@@ -193,12 +178,7 @@ namespace Project.Dal
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error creating category.");
-                return new Result<Category>
-                {
-                    Success = false,
-                    Message = $"Error creating category: {ex.Message}",
-                    Data = null
-                };
+                throw;
             }
         }
 
@@ -242,7 +222,7 @@ namespace Project.Dal
 
                 // Check for duplicate name (excluding current category)
                 var nameExists = await dbContext.Category
-                    .AnyAsync(c => c.Name.ToLower() == category.Name.ToLower() && c.Id != category.Id);
+                    .AnyAsync(c => c.Name == category.Name && c.Id != category.Id);
 
                 if (nameExists)
                 {
@@ -260,7 +240,7 @@ namespace Project.Dal
                 dbContext.Category.Update(existingCategory);
                 await dbContext.SaveChangesAsync();
 
-                logger.LogInformation($"Category '{category.Name}' updated successfully.");
+                logger.LogInformation("Category updated successfully.");
 
                 return new Result<Category>
                 {
@@ -272,12 +252,7 @@ namespace Project.Dal
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error updating category.");
-                return new Result<Category>
-                {
-                    Success = false,
-                    Message = $"Error updating category: {ex.Message}",
-                    Data = null
-                };
+                throw;
             }
         }
 
@@ -328,13 +303,8 @@ namespace Project.Dal
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, $"Error deleting category with ID {id}.");
-                return new Result<Category>
-                {
-                    Success = false,
-                    Message = $"Error deleting category: {ex.Message}",
-                    Data = null
-                };
+                logger.LogError(ex, "Error deleting category.");
+                throw;
             }
         }
     }

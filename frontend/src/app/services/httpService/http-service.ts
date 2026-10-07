@@ -10,4 +10,10 @@ export class HttpService {
   url: string = "https://localhost:7142/api/";
   router = inject(Router);
 
+  constructor() {
+    const configuredUrl = localStorage.getItem('apiBaseUrl');
+    if (configuredUrl) {
+      this.url = configuredUrl.endsWith('/') ? configuredUrl : `${configuredUrl}/`;
+    }
+  }
 }

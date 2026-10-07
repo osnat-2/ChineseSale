@@ -28,22 +28,48 @@ namespace Project.Controllers
 
         //[RaffleBlock]
         [HttpPost]
-        public async Task<Result<Card>> AddCard(CardDto cardDto)
+        public async Task<IActionResult> AddCard(CardDto cardDto)
         {
-            return await _cardService.AddCard(cardDto, GetUserId());
+            var result = await _cardService.AddCard(cardDto, GetUserId());
+            if (result.Success)
+            {
+                return Ok(result.Message);
+            }
+            return BadRequest(result.Message);
         }
 
         [HttpGet("my")]
-        public async Task<Result<Card>> GetMyCards([FromQuery] bool? paid = null) =>
-            await _cardService.GetCardsByUserAsync(GetUserId(), paid);
+        public async Task<IActionResult> GetMyCards([FromQuery] bool? paid = null)
+        {
+            var cards = await _cardService.GetCardsByUserAsync(GetUserId(), paid);
+            if (cards == null)
+            {
+                return NotFound("No cards found for the user.");
+            }
+            return Ok(cards);
+        }
 
         [HttpDelete("{id:int}")]
-        public async Task<Result<Card>> DeleteCard(int id) =>
-            await _cardService.DeleteCardAsync(id, GetUserId());
+        public async Task<IActionResult> DeleteCard(int id)
+        {
+            var result = await _cardService.DeleteCardAsync(id, GetUserId());
+            if (result.Success)
+            {
+                return Ok(result.Message);
+            }
+            return BadRequest(result.Message);
+        }
 
         [HttpPost("payment")]
-        public async Task<Result<Card>> ProcessPayment() =>
-            await _cardService.ProcessPaymentAsync(GetUserId());
+        public async Task<IActionResult> ProcessPayment()
+        {
+            var result = await _cardService.ProcessPaymentAsync(GetUserId());
+            if (!result.Success)
+            {
+                return BadRequest("Payment failed. There are still unpaid cards.");
+            }
+            return Ok("Payment processed successfully.");
+        }
 
         private int GetUserId()
         {

@@ -1,0 +1,189 @@
+.management-page {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.management-header,
+.card-heading,
+.form-actions,
+.card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.management-header h1,
+.management-card h2,
+.management-form h2 {
+  margin: 0;
+}
+
+.eyebrow {
+  margin: 0 0 0.3rem;
+  color: #596579;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.primary-action,
+.secondary-action,
+.danger-action {
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.primary-action {
+  color: #fff;
+  background: #194e8a;
+}
+
+.secondary-action {
+  color: #18324e;
+  background: #e9eef4;
+}
+
+.danger-action {
+  color: #fff;
+  background: #a22222;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.management-form,
+.management-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #d8e0e8;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.management-form label {
+  display: grid;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.management-form input,
+.management-form select,
+.management-form textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #8796a8;
+  border-radius: 0.4rem;
+  font: inherit;
+}
+
+.management-form textarea {
+  resize: vertical;
+}
+
+.form-grid,
+.management-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 1rem;
+}
+
+.management-card p {
+  margin: 0;
+  color: #38485a;
+  overflow-wrap: anywhere;
+}
+
+.management-card dl {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.management-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.management-card dt {
+  font-weight: 700;
+}
+
+.management-card dd {
+  margin: 0;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.status {
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  color: #135b34;
+  background: #e1f3e8;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.status.inactive {
+  color: #713b00;
+  background: #fff0d5;
+}
+
+.confirmation,
+.state-message,
+.empty-state {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: #f0f3f7;
+}
+
+.confirmation {
+  border: 1px solid #dec4a1;
+  background: #fff8ec;
+}
+
+.confirmation p {
+  margin-bottom: 0.75rem;
+  color: #422e18;
+}
+
+.error {
+  color: #8c1919;
+  background: #fff0f0;
+}
+
+.success {
+  color: #14552e;
+  background: #e8f7ec;
+}
+
+@media (max-width: 36rem) {
+  .management-header,
+  .card-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .management-header .primary-action {
+    width: 100%;
+  }
+
+  .card-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

@@ -80,7 +80,7 @@ export class Winner {
     });
   }
 
-  readDrawError(message?: string): string {
+  readDrawError(message?: string | null): string {
     const normalized = message?.toLowerCase() ?? '';
     if (normalized.includes('no paid cards')) {
       return 'winner.noPaidCards';

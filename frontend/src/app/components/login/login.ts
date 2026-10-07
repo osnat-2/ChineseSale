@@ -45,11 +45,11 @@ export class Login implements OnInit {
     this.isLoading = true;
 
     const { email, password } = this.loginForm.value;
-    this.userService.login(email, password).subscribe({
+    this.userService.login({ email, password }).subscribe({
       next: (response) => {
         this.isLoading = false;
-        if (response?.success !== true || typeof response?.message !== 'string') {
-          this.errorMessage = response?.message || 'auth.loginFailed';
+        if (response.success !== true || typeof response.message !== 'string') {
+          this.errorMessage = response.message || 'auth.loginFailed';
           return;
         }
         this.authService.setToken(response.message);
@@ -57,7 +57,10 @@ export class Login implements OnInit {
           this.errorMessage = 'auth.invalidToken';
           return;
         }
-        this.router.navigate(['/home']);
+        if (this.authService.hasRole('User'))
+          this.router.navigate(['/catalog']);
+        if (this.authService.hasRole('Admin'))
+          this.router.navigate(['/admin']);
       },
       error: (error) => {
         this.isLoading = false;

@@ -1,33 +1,87 @@
 <section class="management-page">
-  <header>
-    <p class="eyebrow">{{ 'management.donorEyebrow' | translate }}</p>
-    <h1>{{ 'management.donorTitle' | translate }}</h1>
+  <header class="management-header">
+    <div>
+      <p class="eyebrow">{{ 'management.donorEyebrow' | translate }}</p>
+      <h1>{{ 'management.donorTitle' | translate }}</h1>
+    </div>
+    <button type="button" class="primary-action" (click)="openAddForm()">
+      {{ 'management.addDonor' | translate }}
+    </button>
   </header>
 
-  <div *ngIf="donors.length === 0" class="empty-state">
-    {{ 'management.donorEmpty' | translate }}
-  </div>
+  <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
+  <p *ngIf="actionSuccess" class="state-message success" role="status">{{ actionSuccess | translate }}</p>
+  <p *ngIf="loadError" class="state-message error" role="alert">{{ loadError | translate }}</p>
 
-  <table *ngIf="donors.length > 0">
-    <thead>
-      <tr>
-        <th>{{ 'management.name' | translate }}</th>
-        <th>{{ 'management.email' | translate }}</th>
-        <th>{{ 'management.phone' | translate }}</th>
-        <th>{{ 'management.status' | translate }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let donor of donors">
-        <td>{{ donor.name }}</td>
-        <td>{{ donor.email }}</td>
-        <td>{{ donor.phone }}</td>
-        <td>
-          <span [class.inactive]="!donor.isActive">
-            {{ (donor.isActive ? 'management.active' : 'management.inactive') | translate }}
-          </span>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <form *ngIf="formOpen" #donorForm="ngForm" class="management-form" (ngSubmit)="saveDonor(donorForm)">
+    <h2>{{ (editingDonorId === null ? 'forms.addDonor' : 'forms.editDonor') | translate }}</h2>
+
+    <label>
+      {{ 'management.name' | translate }}
+      <input name="name" [(ngModel)]="formValue.name" required minlength="2" maxlength="100" pattern=".*\S.*">
+    </label>
+
+    <label>
+      {{ 'management.phone' | translate }}
+      <input name="phone" type="tel" [(ngModel)]="formValue.phone" required minlength="9" maxlength="20" pattern="^(?=.*[0-9])[0-9-]+$">
+    </label>
+
+    <label>
+      {{ 'management.email' | translate }}
+      <input name="email" type="email" [(ngModel)]="formValue.email" required maxlength="100">
+    </label>
+
+    <label *ngIf="editingDonorId === null">
+      {{ 'management.initialPassword' | translate }}
+      <input name="password" type="password" [(ngModel)]="formValue.password" required minlength="4" maxlength="72" autocomplete="new-password">
+    </label>
+
+    <div class="form-actions">
+      <button type="submit" class="primary-action" [disabled]="donorForm.invalid || saving">
+        {{ (saving ? 'management.saving' : 'management.save') | translate }}
+      </button>
+      <button type="button" class="secondary-action" (click)="closeForm()">
+        {{ 'management.cancel' | translate }}
+      </button>
+    </div>
+  </form>
+
+  <p *ngIf="loading" class="state-message">{{ 'management.loading' | translate }}</p>
+  <p *ngIf="!loading && !loadError && donors.length === 0" class="empty-state">
+    {{ 'management.donorEmpty' | translate }}
+  </p>
+
+  <div *ngIf="!loading && donors.length > 0" class="management-cards">
+    <article *ngFor="let donor of donors" class="management-card">
+      <div class="card-heading">
+        <h2>{{ donor.name }}</h2>
+        <span class="status" [class.inactive]="!donor.isActive">
+          {{ (donor.isActive ? 'management.active' : 'management.inactive') | translate }}
+        </span>
+      </div>
+      <dl>
+        <div><dt>{{ 'management.email' | translate }}</dt><dd>{{ donor.email }}</dd></div>
+        <div><dt>{{ 'management.phone' | translate }}</dt><dd>{{ donor.phone }}</dd></div>
+      </dl>
+      <div class="card-actions">
+        <button type="button" class="secondary-action" (click)="openEditForm(donor)">
+          {{ 'management.update' | translate }}
+        </button>
+        <button type="button" class="danger-action" (click)="requestDelete(donor.id)">
+          {{ 'management.delete' | translate }}
+        </button>
+      </div>
+      <div *ngIf="deleteConfirmationId === donor.id" class="confirmation" role="alertdialog">
+        <p>{{ 'management.confirmDeleteDonor' | translate }}</p>
+        <div class="card-actions">
+          <button type="button" class="danger-action" [disabled]="saving" (click)="deleteDonor(donor.id)">
+            {{ 'management.confirm' | translate }}
+          </button>
+          <button type="button" class="secondary-action" [disabled]="saving" (click)="cancelDelete()">
+            {{ 'management.cancel' | translate }}
+          </button>
+        </div>
+      </div>
+    </article>
+  </div>
 </section>

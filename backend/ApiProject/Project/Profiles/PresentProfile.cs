@@ -15,7 +15,6 @@ namespace Project
                 .ForMember(destination => destination.CreatedAt, options => options.Ignore())
                 .ForMember(destination => destination.UpdatedAt, options => options.Ignore())
                 .ForMember(destination => destination.CreatedBy, options => options.Ignore())
-                .ForMember(destination => destination.CreatedByUser, options => options.Ignore())
                 .ForMember(destination => destination.Donor, options => options.Ignore());
             // .ForMember(destination => destination.IsActive, options => options.MapFrom(_ => true));
         }

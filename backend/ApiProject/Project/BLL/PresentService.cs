@@ -30,7 +30,11 @@ namespace Project.Bll
                 };
             }
 
-            if (!Validator.ValidName(presentDto.Name) || presentDto.Quantity < 0 || presentDto.CategoryId <= 0 || presentDto.DonorId <= 0)
+            if (!Validator.ValidName(presentDto.Name) ||
+                presentDto.Quantity < 1 ||
+                presentDto.CategoryId <= 0 ||
+                presentDto.DonorId <= 0 ||
+                presentDto.Price < 0)
             {
                 return new Result<Present>
                 {
@@ -53,6 +57,8 @@ namespace Project.Bll
             }
 
             var present = _mapper.Map<Present>(presentDto);
+            present.IsActive = true;
+            present.IsDeleted = false;
             return await _presentDal.AddPresentAsync(present);
         }
 
@@ -147,7 +153,11 @@ namespace Project.Bll
                 };
             }
 
-            if (!Validator.ValidName(presentDto.Name) || presentDto.Quantity < 0 || presentDto.CategoryId <= 0 || presentDto.DonorId <= 0)
+            if (!Validator.ValidName(presentDto.Name) ||
+                presentDto.Quantity < 1 ||
+                presentDto.CategoryId <= 0 ||
+                presentDto.DonorId <= 0 ||
+                presentDto.Price < 0)
             {
                 return new Result<Present>
                 {

@@ -1,19 +1,124 @@
 <section class="management-page">
-  <header>
-    <p class="eyebrow">{{ 'management.presentEyebrow' | translate }}</p>
-    <h1>{{ 'management.presentTitle' | translate }}</h1>
+  <header class="management-header">
+    <div>
+      <p class="eyebrow">{{ 'management.presentEyebrow' | translate }}</p>
+      <h1>{{ 'management.presentTitle' | translate }}</h1>
+    </div>
+    <button type="button" class="primary-action" (click)="openAddForm()">
+      {{ 'management.addPresent' | translate }}
+    </button>
   </header>
 
-  <div *ngIf="presents.length === 0" class="empty-state">
-    {{ 'management.presentEmpty' | translate }}
-  </div>
+  <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
+  <p *ngIf="actionSuccess" class="state-message success" role="status">{{ actionSuccess | translate }}</p>
+  <p *ngIf="loadError" class="state-message error" role="alert">{{ loadError | translate }}</p>
+  <p *ngIf="referenceError" class="state-message error" role="alert">{{ referenceError | translate }}</p>
 
-  <div *ngIf="presents.length > 0" class="cards">
-    <article *ngFor="let present of presents" class="info-card">
-      <h2>{{ present.name }}</h2>
-      <p><strong>{{ 'management.category' | translate }}:</strong> {{ present.category }}</p>
-      <p><strong>{{ 'management.price' | translate }}:</strong> {{ present.price | localizedCurrency:'ILS' }}</p>
-      <p><strong>{{ 'management.status' | translate }}:</strong> {{ (present.active ? 'management.active' : 'management.inactive') | translate }}</p>
+  <form *ngIf="formOpen" #presentForm="ngForm" class="management-form" (ngSubmit)="savePresent(presentForm)">
+    <h2>{{ (editingPresentId === null ? 'forms.addPresent' : 'forms.editPresent') | translate }}</h2>
+
+    <label>
+      {{ 'management.name' | translate }}
+      <input name="name" [(ngModel)]="formValue.name" required minlength="1" maxlength="100" pattern=".*\S.*">
+    </label>
+
+    <label>
+      {{ 'management.description' | translate }}
+      <textarea name="description" [(ngModel)]="formValue.description" required maxlength="2000" pattern=".*\S.*" rows="4"></textarea>
+    </label>
+
+    <label>
+      {{ 'management.donor' | translate }}
+      <select name="donorId" [(ngModel)]="formValue.donorId" required>
+        <option [ngValue]="null" disabled>{{ 'management.chooseDonor' | translate }}</option>
+        <option *ngFor="let donor of donors" [ngValue]="donor.id" [disabled]="!donor.isActive && donor.id !== formValue.donorId">
+          {{ donor.name }}{{ donor.isActive ? '' : ' (' + ('management.inactive' | translate) + ')' }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      {{ 'management.category' | translate }}
+      <select name="categoryId" [(ngModel)]="formValue.categoryId" required>
+        <option [ngValue]="null" disabled>{{ 'management.chooseCategory' | translate }}</option>
+        <option
+          *ngFor="let category of categories"
+          [ngValue]="category.id"
+          [disabled]="!category.isActive && category.id !== formValue.categoryId">
+          {{ category.name }}
+        </option>
+      </select>
+    </label>
+
+    <label>
+      {{ 'management.imageUrl' | translate }}
+      <input name="imageUrl" type="url" [(ngModel)]="formValue.imageUrl" required maxlength="2048" pattern="https?://.+">
+    </label>
+
+    <div class="form-grid">
+      <label>
+        {{ 'management.quantity' | translate }}
+        <input name="quantity" type="number" [(ngModel)]="formValue.quantity" required min="1" max="2147483647" step="1">
+      </label>
+      <label>
+        {{ 'management.price' | translate }}
+        <input name="price" type="number" [(ngModel)]="formValue.price" required min="0" max="2147483647" step="1">
+      </label>
+    </div>
+
+    <p *ngIf="loadingReferences" class="state-message">{{ 'management.loadingReferences' | translate }}</p>
+    <p *ngIf="!loadingReferences && (!donors.length || !categories.length)" class="state-message error" role="alert">
+      {{ 'management.referenceRequired' | translate }}
+    </p>
+
+    <div class="form-actions">
+      <button type="submit" class="primary-action" [disabled]="presentForm.invalid || saving || !donors.length || !categories.length">
+        {{ (saving ? 'management.saving' : 'management.save') | translate }}
+      </button>
+      <button type="button" class="secondary-action" (click)="closeForm()">
+        {{ 'management.cancel' | translate }}
+      </button>
+    </div>
+  </form>
+
+  <p *ngIf="loadingPresents" class="state-message">{{ 'management.loading' | translate }}</p>
+  <p *ngIf="!loadingPresents && !loadError && presents.length === 0" class="empty-state">
+    {{ 'management.presentEmpty' | translate }}
+  </p>
+
+  <div *ngIf="!loadingPresents && presents.length > 0" class="management-cards">
+    <article *ngFor="let present of presents" class="management-card">
+      <div class="card-heading">
+        <h2>{{ present.name }}</h2>
+        <span class="status" [class.inactive]="!present.isActive">
+          {{ (present.isActive ? 'management.active' : 'management.inactive') | translate }}
+        </span>
+      </div>
+      <p>{{ present.description }}</p>
+      <dl>
+        <div><dt>{{ 'management.category' | translate }}</dt><dd>{{ categoryName(present.categoryId) }}</dd></div>
+        <div><dt>{{ 'management.quantity' | translate }}</dt><dd>{{ present.quantity }}</dd></div>
+        <div><dt>{{ 'management.price' | translate }}</dt><dd>{{ present.price | localizedCurrency:'ILS' }}</dd></div>
+      </dl>
+      <div class="card-actions">
+        <button type="button" class="secondary-action" (click)="openEditForm(present)">
+          {{ 'management.update' | translate }}
+        </button>
+        <button type="button" class="danger-action" (click)="requestDelete(present.id)">
+          {{ 'management.delete' | translate }}
+        </button>
+      </div>
+      <div *ngIf="deleteConfirmationId === present.id" class="confirmation" role="alertdialog">
+        <p>{{ 'management.confirmDeletePresent' | translate }}</p>
+        <div class="card-actions">
+          <button type="button" class="danger-action" [disabled]="saving" (click)="deletePresent(present.id)">
+            {{ 'management.confirm' | translate }}
+          </button>
+          <button type="button" class="secondary-action" [disabled]="saving" (click)="cancelDelete()">
+            {{ 'management.cancel' | translate }}
+          </button>
+        </div>
+      </div>
     </article>
   </div>
 </section>
