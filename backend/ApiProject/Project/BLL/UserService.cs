@@ -58,7 +58,7 @@ namespace Project.Bll
 
             if (!isPasswordValid)
             {
-                _logger.LogWarning($"Failed login attempt for email: {email}. Incorrect password.");
+                _logger.LogWarning("Failed login attempt.");
                 return new Result<string>
                 {
                     Success = false,
@@ -89,7 +89,7 @@ namespace Project.Bll
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            _logger.LogInformation($"User with email {email} logged in successfully.");
+            _logger.LogInformation("User authentication succeeded.");
             return new Result<string>
             {
                 Success = true,
@@ -126,6 +126,46 @@ namespace Project.Bll
         public async Task<Result<User>> AddDonor(UserDto userDto) => await AddPrivilegedUserAsync(userDto, DonorRole);
 
         public async Task<Result<User>> AddAdmin(UserDto userDto) => await AddPrivilegedUserAsync(userDto, AdminRole);
+
+        public Task<Result<User>> GetDonorsAsync() => _userDal.GetDonorsAsync();
+
+        public async Task<Result<User>> UpdateDonorAsync(int id, DonorUpdateDto donorDto)
+        {
+            if (id <= 0 || donorDto == null ||
+                !Validator.ValidateData(donorDto.Name, donorDto.Email, donorDto.Phone))
+            {
+                return new Result<User>
+                {
+                    Success = false,
+                    Message = "Invalid donor details",
+                    Data = null
+                };
+            }
+
+            var donorDetails = new User
+            {
+                Name = donorDto.Name.Trim(),
+                Phone = donorDto.Phone.Trim(),
+                Email = donorDto.Email.Trim()
+            };
+
+            return await _userDal.UpdateDonorAsync(id, donorDetails);
+        }
+
+        public Task<Result<User>> DeleteDonorAsync(int id)
+        {
+            if (id <= 0)
+            {
+                return Task.FromResult(new Result<User>
+                {
+                    Success = false,
+                    Message = "Invalid donor id",
+                    Data = null
+                });
+            }
+
+            return _userDal.DeleteDonorAsync(id);
+        }
 
         private async Task<Result<User>> AddPrivilegedUserAsync(UserDto userDto, string roleName)
         {

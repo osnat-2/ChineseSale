@@ -16,7 +16,7 @@ namespace Project.Models
         [MaxLength(100)]
         public string Email { get; set; }
         [DefaultValue("")]
-        [MaxLength(18)]
+        [MaxLength(255)]
         [MinLength(4)]
         public string? Password { get; set; } = "";
         [Required]

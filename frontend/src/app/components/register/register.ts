@@ -49,8 +49,8 @@ export class Register implements OnInit {
     this.userService.register(user).subscribe({
       next: (response) => {
         this.isSubmitting = false;
-        if (response?.isSuccess === false) {
-          this.errorMessage = response?.message || 'auth.registerFailed';
+        if (response.success !== true) {
+          this.errorMessage = response.message || 'auth.registerFailed';
           return;
         }
         this.successMessage = 'auth.registerSuccess';

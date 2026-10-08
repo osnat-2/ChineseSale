@@ -1,27 +1,43 @@
 <section class="management-page">
-  <header>
-    <p class="eyebrow">{{ 'management.winnerEyebrow' | translate }}</p>
-    <h1>{{ 'management.winnerTitle' | translate }}</h1>
+  <header class="management-header">
+    <div>
+      <p class="eyebrow">{{ 'management.winnerEyebrow' | translate }}</p>
+      <h1>{{ 'management.winnerTitle' | translate }}</h1>
+    </div>
+    <button
+      type="button"
+      class="primary-action"
+      (click)="createLottery()"
+      [disabled]="selectedPresentId === null || drawing || isSelectedPresentDrawn()">
+      {{ 'management.createLottery' | translate }}
+    </button>
   </header>
 
-  <div *ngIf="!latestWinner" class="empty-state">
-    {{ 'management.winnerEmpty' | translate }}
-  </div>
+  <p *ngIf="loadError" class="state-message error" role="alert">{{ loadError | translate }}</p>
+  <p *ngIf="drawError" class="state-message error" role="alert">{{ drawError | translate }}</p>
+  <p *ngIf="successMessage" class="state-message success" role="status">{{ successMessage | translate }}</p>
 
-  <table *ngIf="latestWinner">
-    <thead>
-      <tr>
-        <th>{{ 'management.present' | translate }}</th>
-        <th>{{ 'management.card' | translate }}</th>
-        <th>{{ 'management.lottery' | translate }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>#{{ latestWinner.presentId }}</td>
-        <td>#{{ latestWinner.cardId }}</td>
-        <td>#{{ latestWinner.lotteryId }}</td>
-      </tr>
-    </tbody>
-  </table>
+  <label class="present-selector">
+    {{ 'winner.present' | translate }}
+    <select name="presentId" [(ngModel)]="selectedPresentId" [disabled]="loading || presents.length === 0 || drawing">
+      <option [ngValue]="null" disabled>{{ 'management.choosePresent' | translate }}</option>
+      <option *ngFor="let present of presents" [ngValue]="present.id">{{ present.name }}</option>
+    </select>
+  </label>
+
+  <p *ngIf="loading" class="state-message">{{ 'winner.loading' | translate }}</p>
+  <p *ngIf="!loading && !loadError && presents.length === 0" class="empty-state">
+    {{ 'winner.empty' | translate }}
+  </p>
+  <p *ngIf="drawing" class="state-message" role="status">{{ 'winner.drawing' | translate }}</p>
+
+  <aside *ngIf="latestWinner" class="winner-result" aria-live="polite">
+    <p class="eyebrow">{{ 'winner.latest' | translate }}</p>
+    <h2>{{ 'winner.persisted' | translate }}</h2>
+    <dl>
+      <div><dt>{{ 'winner.present' | translate }}</dt><dd><bdi>#{{ latestWinner.presentId }}</bdi></dd></div>
+      <div><dt>{{ 'winner.card' | translate }}</dt><dd><bdi>#{{ latestWinner.cardId }}</bdi></dd></div>
+      <div><dt>{{ 'winner.lottery' | translate }}</dt><dd><bdi>#{{ latestWinner.lotteryId }}</bdi></dd></div>
+    </dl>
+  </aside>
 </section>

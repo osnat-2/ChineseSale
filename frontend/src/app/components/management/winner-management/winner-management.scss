@@ -1,0 +1,111 @@
+.management-page {
+  display: grid;
+  gap: 1.25rem;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.management-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.management-header h1,
+.winner-result h2 {
+  margin: 0;
+}
+
+.eyebrow {
+  margin: 0 0 0.3rem;
+  color: #596579;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.primary-action {
+  min-height: 2.9rem;
+  padding: 0.7rem 1.1rem;
+  border: 0;
+  border-radius: 0.5rem;
+  color: #fff;
+  background: #194e8a;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.present-selector {
+  display: grid;
+  gap: 0.45rem;
+  max-width: 32rem;
+  font-weight: 700;
+}
+
+.present-selector select {
+  min-height: 2.75rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #8796a8;
+  border-radius: 0.4rem;
+  background: #fff;
+  font: inherit;
+}
+
+.state-message,
+.empty-state,
+.winner-result {
+  padding: 1rem;
+  border-radius: 0.6rem;
+  background: #f0f3f7;
+}
+
+.error {
+  color: #8c1919;
+  background: #fff0f0;
+}
+
+.success {
+  color: #14552e;
+  background: #e8f7ec;
+}
+
+.winner-result {
+  border: 1px solid #cbd8e5;
+  background: #fff;
+}
+
+.winner-result dl {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 0;
+}
+
+.winner-result dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.winner-result dt {
+  font-weight: 700;
+}
+
+.winner-result dd {
+  margin: 0;
+}
+
+@media (max-width: 36rem) {
+  .management-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

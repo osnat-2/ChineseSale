@@ -19,34 +19,61 @@ namespace Project.Controllers
             _userService = userService;
         }
 
-        // ����� �-POST �� ���� "login" ����� ����� �� ������� �-Body
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<Result<string>> LoginUserAsync([FromQuery] string email, [FromQuery] string password)
+        public async Task<IActionResult> LoginUserAsync([FromBody] LoginRequestDto loginRequest)
         {
-            return await _userService.Login(email, password);
+            var result = await _userService.Login(loginRequest.Email, loginRequest.Password);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return Unauthorized();
         }
 
         // ����� �-POST �� ���� "register" ����� ����� �� ������� �-Body
         [HttpPost("register")]
         [AllowAnonymous]
-        public async Task<Result<User>> Register([FromBody] UserDto userDto) // ��� �� ������ �-FromBody
+        public async Task<IActionResult> Register([FromBody] UserDto userDto) // ��� �� ������ �-FromBody
         {
-            return await _userService.Register(userDto);
+            var result = await _userService.Register(userDto);
+            var safeResult = ToSafeUserResult(result);
+            return result.Success ? Ok(safeResult) : BadRequest(safeResult);
         }
 
         [HttpPost("addDonor")]
         [Authorize(Roles = "Admin")]
-        public async Task<Result<User>> AddDonor([FromBody] UserDto userDto) //  -FromBody
+        public async Task<IActionResult> AddDonor([FromBody] UserDto userDto) //  -FromBody
         {
-            return await _userService.AddDonor(userDto);
+            var result = await _userService.AddDonor(userDto);
+            var safeResult = ToSafeUserResult(result);
+            return result.Success ? Ok(safeResult) : BadRequest(safeResult);
         }
 
         [HttpPost("addAdmin")]
         [Authorize(Roles = "Admin")]
-        public async Task<Result<User>> AddAdmin([FromBody] UserDto userDto) //  -FromBody
+        public async Task<IActionResult> AddAdmin([FromBody] UserDto userDto) //  -FromBody
         {
-            return await _userService.AddAdmin(userDto);
+            var result = await _userService.AddAdmin(userDto);
+            var safeResult = ToSafeUserResult(result);
+            return result.Success ? Ok(safeResult) : BadRequest(safeResult);
+        }
+
+        private static Result<UserResponseDto> ToSafeUserResult(Result<User> result)
+        {
+            return new Result<UserResponseDto>
+            {
+                Success = result.Success,
+                Message = result.Message,
+                Data = result.Data?.Select(user => new UserResponseDto
+                {
+                    Id = user.Id,
+                    Name = user.Name,
+                    Phone = user.Phone,
+                    Email = user.Email,
+                    IsActive = user.IsActive
+                }).ToList()
+            };
         }
     }
 }

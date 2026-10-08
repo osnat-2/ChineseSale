@@ -27,26 +27,14 @@ namespace Project.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<Result<Category>>> GetAllCategories([FromQuery] bool includeInactive = false)
         {
-            try
-            {
-                var result = await _categoryService.GetAllCategoriesAsync(includeInactive);
-                
-                if (result.Success)
-                {
-                    return Ok(result);
-                }
+            var result = await _categoryService.GetAllCategoriesAsync(includeInactive);
 
-                return BadRequest(result);
-            }
-            catch (Exception ex)
+            if (result.Success)
             {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Result<Category>
-                {
-                    Success = false,
-                    Message = $"Internal server error: {ex.Message}",
-                    Data = null
-                });
+                return Ok(result);
             }
+
+            return BadRequest(result);
         }
 
         /// <summary>
@@ -58,36 +46,24 @@ namespace Project.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<Result<Category>>> GetCategoryById(int id)
         {
-            try
+            if (id <= 0)
             {
-                if (id <= 0)
-                {
-                    return BadRequest(new Result<Category>
-                    {
-                        Success = false,
-                        Message = "Invalid category ID.",
-                        Data = null
-                    });
-                }
-
-                var result = await _categoryService.GetCategoryByIdAsync(id);
-
-                if (result.Success)
-                {
-                    return Ok(result);
-                }
-
-                return NotFound(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Result<Category>
+                return BadRequest(new Result<Category>
                 {
                     Success = false,
-                    Message = $"Internal server error: {ex.Message}",
+                    Message = "Invalid category ID.",
                     Data = null
                 });
             }
+
+            var result = await _categoryService.GetCategoryByIdAsync(id);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return NotFound(result);
         }
 
         /// <summary>
@@ -99,36 +75,24 @@ namespace Project.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Result<Category>>> CreateCategory([FromBody] CategoryDto categoryDto)
         {
-            try
+            if (categoryDto == null)
             {
-                if (categoryDto == null)
-                {
-                    return BadRequest(new Result<Category>
-                    {
-                        Success = false,
-                        Message = "Category data is required.",
-                        Data = null
-                    });
-                }
-
-                var result = await _categoryService.CreateCategoryAsync(categoryDto);
-
-                if (result.Success)
-                {
-                    return CreatedAtAction(nameof(GetCategoryById), new { id = result.Data?.FirstOrDefault()?.Id }, result);
-                }
-
-                return BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Result<Category>
+                return BadRequest(new Result<Category>
                 {
                     Success = false,
-                    Message = $"Internal server error: {ex.Message}",
+                    Message = "Category data is required.",
                     Data = null
                 });
             }
+
+            var result = await _categoryService.CreateCategoryAsync(categoryDto);
+
+            if (result.Success)
+            {
+                return CreatedAtAction(nameof(GetCategoryById), new { id = result.Data?.FirstOrDefault()?.Id }, result);
+            }
+
+            return BadRequest(result);
         }
 
         /// <summary>
@@ -141,46 +105,34 @@ namespace Project.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Result<Category>>> UpdateCategory(int id, [FromBody] CategoryDto categoryDto)
         {
-            try
+            if (id <= 0)
             {
-                if (id <= 0)
-                {
-                    return BadRequest(new Result<Category>
-                    {
-                        Success = false,
-                        Message = "Invalid category ID.",
-                        Data = null
-                    });
-                }
-
-                if (categoryDto == null)
-                {
-                    return BadRequest(new Result<Category>
-                    {
-                        Success = false,
-                        Message = "Category data is required.",
-                        Data = null
-                    });
-                }
-
-                var result = await _categoryService.UpdateCategoryAsync(id, categoryDto);
-
-                if (result.Success)
-                {
-                    return Ok(result);
-                }
-
-                return BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Result<Category>
+                return BadRequest(new Result<Category>
                 {
                     Success = false,
-                    Message = $"Internal server error: {ex.Message}",
+                    Message = "Invalid category ID.",
                     Data = null
                 });
             }
+
+            if (categoryDto == null)
+            {
+                return BadRequest(new Result<Category>
+                {
+                    Success = false,
+                    Message = "Category data is required.",
+                    Data = null
+                });
+            }
+
+            var result = await _categoryService.UpdateCategoryAsync(id, categoryDto);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return BadRequest(result);
         }
 
         /// <summary>
@@ -192,36 +144,24 @@ namespace Project.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<Result<Category>>> DeleteCategory(int id)
         {
-            try
+            if (id <= 0)
             {
-                if (id <= 0)
-                {
-                    return BadRequest(new Result<Category>
-                    {
-                        Success = false,
-                        Message = "Invalid category ID.",
-                        Data = null
-                    });
-                }
-
-                var result = await _categoryService.DeleteCategoryAsync(id);
-
-                if (result.Success)
-                {
-                    return Ok(result);
-                }
-
-                return NotFound(result);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError, new Result<Category>
+                return BadRequest(new Result<Category>
                 {
                     Success = false,
-                    Message = $"Internal server error: {ex.Message}",
+                    Message = "Invalid category ID.",
                     Data = null
                 });
             }
+
+            var result = await _categoryService.DeleteCategoryAsync(id);
+
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+
+            return NotFound(result);
         }
     }
 }

@@ -1,7 +1,11 @@
-﻿namespace Project.Dto
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Project.Dto
 {
     public class CategoryDto
     {
-        public string Name { get; set; }
+        [Required]
+        [StringLength(100, MinimumLength = 1)]
+        public string Name { get; set; } = string.Empty;
     }
 }

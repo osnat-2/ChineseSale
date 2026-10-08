@@ -14,8 +14,7 @@ namespace Project.Profiles
                 .ForMember(destination => destination.DeletedAt, options => options.Ignore())
                 .ForMember(destination => destination.CreatedAt, options => options.Ignore())
                 .ForMember(destination => destination.UpdatedAt, options => options.Ignore())
-                .ForMember(destination => destination.CreatedBy, options => options.Ignore())
-                .ForMember(destination => destination.CreatedByUser, options => options.Ignore());
+                .ForMember(destination => destination.CreatedBy, options => options.Ignore());
             // .ForMember(destination => destination.IsMadeOut, options => options.MapFrom(_ => false));
         }
     }

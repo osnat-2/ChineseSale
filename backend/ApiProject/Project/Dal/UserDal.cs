@@ -36,10 +36,10 @@ namespace Project.Dal
                     .FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
             }
 
-            catch
+            catch (Exception ex)
             {
-                logger.LogError("could not find check duplicate email");
-                return null;
+                logger.LogError(ex, "An error occurred while looking up a user.");
+                throw;
             }
         }
 
@@ -55,7 +55,7 @@ namespace Project.Dal
                 await dbContext.User.AddAsync(user);
                 await dbContext.SaveChangesAsync();
 
-                logger.LogInformation($"User with email {user.Email} registered successfully.");
+                logger.LogInformation("User registration completed successfully.");
                 return new Result<User>
                 {
                     Success = true,
@@ -66,12 +66,138 @@ namespace Project.Dal
             catch (Exception ex)
             {
                 logger.LogError(ex, "An error occurred during the registration process.");
+                throw;
+            }
+        }
+
+        public async Task<Result<User>> GetDonorsAsync()
+        {
+            try
+            {
+                var donors = await dbContext.User
+                    .AsNoTracking()
+                    .Include(user => user.Role)
+                    .Where(user => user.Role != null && user.Role.Name == "Donor")
+                    .OrderBy(user => user.Name)
+                    .ToListAsync();
+
                 return new Result<User>
                 {
-                    Success = false,
-                    Message = "An error occurred during the registration process. Please try again later.",
+                    Success = true,
+                    Message = "Donors fetched successfully.",
+                    Data = donors
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while loading donors.");
+                throw;
+            }
+        }
+
+        public async Task<Result<User>> UpdateDonorAsync(int id, User donorDetails)
+        {
+            try
+            {
+                var donor = await dbContext.User
+                    .Include(user => user.Role)
+                    .FirstOrDefaultAsync(user =>
+                        user.Id == id &&
+                        user.Role != null &&
+                        user.Role.Name == "Donor");
+
+                if (donor == null)
+                {
+                    return new Result<User>
+                    {
+                        Success = false,
+                        Message = "Donor was not found.",
+                        Data = null
+                    };
+                }
+
+                var emailInUse = await dbContext.User.AnyAsync(user =>
+                    user.Id != id && user.Email == donorDetails.Email);
+                if (emailInUse)
+                {
+                    return new Result<User>
+                    {
+                        Success = false,
+                        Message = "Email already exists.",
+                        Data = null
+                    };
+                }
+
+                donor.Name = donorDetails.Name;
+                donor.Phone = donorDetails.Phone;
+                donor.Email = donorDetails.Email;
+                donor.UpdatedAt = DateTime.UtcNow;
+                await dbContext.SaveChangesAsync();
+
+                return new Result<User>
+                {
+                    Success = true,
+                    Message = "Donor updated successfully.",
+                    Data = new[] { donor }
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while updating donor {DonorId}.", id);
+                throw;
+            }
+        }
+
+        public async Task<Result<User>> DeleteDonorAsync(int id)
+        {
+            try
+            {
+                var donor = await dbContext.User
+                    .Include(user => user.Role)
+                    .FirstOrDefaultAsync(user =>
+                        user.Id == id &&
+                        user.Role != null &&
+                        user.Role.Name == "Donor");
+
+                if (donor == null)
+                {
+                    return new Result<User>
+                    {
+                        Success = false,
+                        Message = "Donor was not found.",
+                        Data = null
+                    };
+                }
+
+                var hasPresentReferences = await dbContext.Present.AnyAsync(
+                    present => present.DonorId == donor.Id);
+                if (hasPresentReferences)
+                {
+                    return new Result<User>
+                    {
+                        Success = false,
+                        Message = "Donor is assigned to one or more presents and cannot be deleted.",
+                        Data = null
+                    };
+                }
+
+                donor.IsActive = false;
+                donor.IsDeleted = true;
+                donor.DeletedAt = DateTime.UtcNow;
+                donor.UpdatedAt = DateTime.UtcNow;
+                await dbContext.SaveChangesAsync();
+
+                return new Result<User>
+                {
+                    Success = true,
+                    Message = "Donor deleted successfully.",
                     Data = null
                 };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while deleting donor {DonorId}.", id);
+                throw;
             }
         }
     }

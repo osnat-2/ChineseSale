@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Project;
 using Project.Bll;
 using Project.Bll.Interfaces;
@@ -22,11 +23,12 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
     .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
     .WriteTo.Console()
     .WriteTo.File(
         Path.Combine(AppContext.BaseDirectory, "Logs", "log-.txt"),
         rollingInterval: RollingInterval.Day,
-        outputTemplate: "{Message:lj}{NewLine}" // ���� �� �� ����� ����� ��� ��� ��� ����� �����
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}"
     )
     .CreateLogger();
 
@@ -35,6 +37,7 @@ builder.Host.UseSerilog();
 // Add services to the container.
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
+    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
 });
 
@@ -81,6 +84,8 @@ builder.Services.AddScoped<ILotteryService, LotteryService>();
 builder.Services.AddScoped<ILotteryDal, LotteryDal>();
 builder.Services.AddScoped<IPresentService, PresentService>();
 builder.Services.AddScoped<IPresentDal, PresentDal>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IRoleDal, RoleDal>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserDal, UserDal>();
 builder.Services.AddScoped<IWinnerService, WinnerService>();
@@ -125,7 +130,17 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    await scope.ServiceProvider
+        .GetRequiredService<IRoleService>()
+        .SeedDefaultRolesAsync();
+}
+
 // Configure the HTTP request pipeline.
+app.UseRequestLogging();
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -139,9 +154,6 @@ app.UseCors("MyAllowSpecificOrigins");
 
 app.UseAuthentication(); // 1. ���� ������� �� ������
 app.UseAuthorization();
-
-// 2. �� �� ������� �� �-Middleware �� ������ (��� ����� ���� �� ������ ��� ����� ���� Anonymous)
-app.UseRequestLogging();
 
 app.MapControllers();
 
