@@ -3,19 +3,19 @@
     <h1 class="auth-title">{{ 'auth.registerTitle' | translate }}</h1>
 
     <!-- Error Message -->
-    <div *ngIf="errorMessage" class="alert alert-error">
+    <div *ngIf="errorMessage" class="alert alert-error" role="alert">
       <span class="alert-icon">⚠</span>
       <p class="alert-text">{{ errorMessage | translate }}</p>
     </div>
 
     <!-- Success Message -->
-    <div *ngIf="successMessage" class="alert alert-success">
+    <div *ngIf="successMessage" class="alert alert-success" role="status">
       <span class="alert-icon">✓</span>
       <p class="alert-text">{{ successMessage | translate }}</p>
     </div>
 
     <!-- Register Form -->
-    <form [formGroup]="registerForm" (ngSubmit)="register()" class="auth-form">
+    <form [formGroup]="registerForm" (ngSubmit)="register()" class="auth-form" [attr.aria-busy]="isSubmitting">
       <!-- Name Field -->
       <div class="form-group">
         <label for="name" class="form-label">{{ 'auth.fullName' | translate }}</label>
@@ -26,8 +26,10 @@
           class="form-input"
           [placeholder]="'auth.namePlaceholder' | translate"
           [disabled]="isSubmitting"
+          [attr.aria-invalid]="registerForm.get('name')?.invalid && registerForm.get('name')?.touched ? 'true' : null"
+          [attr.aria-describedby]="registerForm.get('name')?.invalid && registerForm.get('name')?.touched ? 'register-name-error' : null"
         />
-        <div *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" class="error-message">
+        <div *ngIf="registerForm.get('name')?.invalid && registerForm.get('name')?.touched" id="register-name-error" class="error-message">
           <span *ngIf="registerForm.get('name')?.hasError('required')">{{ 'auth.nameRequired' | translate }}</span>
           <span *ngIf="registerForm.get('name')?.hasError('minlength')">{{ 'auth.nameMin' | translate }}</span>
         </div>
@@ -43,8 +45,10 @@
           class="form-input"
           [placeholder]="'auth.emailPlaceholder' | translate"
           [disabled]="isSubmitting"
+          [attr.aria-invalid]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched ? 'true' : null"
+          [attr.aria-describedby]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched ? 'register-email-error' : null"
         />
-        <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" class="error-message">
+        <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" id="register-email-error" class="error-message">
           <span *ngIf="registerForm.get('email')?.hasError('required')">{{ 'auth.emailRequired' | translate }}</span>
           <span *ngIf="registerForm.get('email')?.hasError('email')">{{ 'auth.emailInvalid' | translate }}</span>
         </div>
@@ -60,8 +64,10 @@
           class="form-input"
           [placeholder]="'auth.phonePlaceholder' | translate"
           [disabled]="isSubmitting"
+          [attr.aria-invalid]="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched ? 'true' : null"
+          [attr.aria-describedby]="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched ? 'register-phone-error' : null"
         />
-        <div *ngIf="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched" class="error-message">
+        <div *ngIf="registerForm.get('phone')?.invalid && registerForm.get('phone')?.touched" id="register-phone-error" class="error-message">
           <span *ngIf="registerForm.get('phone')?.hasError('required')">{{ 'auth.phoneRequired' | translate }}</span>
           <span *ngIf="registerForm.get('phone')?.hasError('minlength')">{{ 'auth.phoneMin' | translate }}</span>
         </div>
@@ -77,8 +83,10 @@
           class="form-input"
           [placeholder]="'auth.createPassword' | translate"
           [disabled]="isSubmitting"
+          [attr.aria-invalid]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched ? 'true' : null"
+          [attr.aria-describedby]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched ? 'register-password-error' : null"
         />
-        <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" class="error-message">
+        <div *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched" id="register-password-error" class="error-message">
           <span *ngIf="registerForm.get('password')?.hasError('required')">{{ 'auth.passwordRequired' | translate }}</span>
           <span *ngIf="registerForm.get('password')?.hasError('minlength')">{{ 'auth.passwordMin' | translate }}</span>
         </div>
@@ -98,7 +106,7 @@
     <div class="auth-footer">
       <p class="footer-text">
         {{ 'auth.hasAccount' | translate }}
-        <a routerLink="/login" class="auth-link">{{ 'auth.loginLink' | translate }}</a>
+        <a routerLink="/login" [queryParams]="returnUrl ? { returnUrl: returnUrl } : null" class="auth-link">{{ 'auth.loginLink' | translate }}</a>
       </p>
     </div>
   </div>

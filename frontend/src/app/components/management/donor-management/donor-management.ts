@@ -1,18 +1,22 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { donorModel } from '../../../models/donor';
 import { TranslatePipe } from '../../../i18n/translate.pipe';
 import { CreateDonorRequest, DonorService, UpdateDonorRequest } from '../../../services/donorService/donor-service';
+import { hasApiResponseMessage } from '../../../models/api-message';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 
 @Component({
   selector: 'app-donor-management',
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, RouterLink, TranslatePipe, CdkTrapFocus],
   templateUrl: './donor-management.html',
   styleUrl: './donor-management.scss',
 })
 export class DonorManagement implements OnInit {
   donors: donorModel[] = [];
+  searchTerm = '';
   loading = false;
   formOpen = false;
   saving = false;
@@ -25,8 +29,21 @@ export class DonorManagement implements OnInit {
 
   constructor(private readonly donorService: DonorService) {}
 
+  get filteredDonors(): donorModel[] {
+    const query = this.searchTerm.trim().toLocaleLowerCase();
+    if (!query) return this.donors;
+    return this.donors.filter((donor) =>
+      [donor.name, donor.email, donor.phone]
+        .some((value) => value.toLocaleLowerCase().includes(query))
+    );
+  }
+
   ngOnInit(): void {
     this.loadDonors();
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
   }
 
   openAddForm(): void {
@@ -49,6 +66,9 @@ export class DonorManagement implements OnInit {
   }
 
   closeForm(): void {
+    if (this.saving) {
+      return;
+    }
     this.formOpen = false;
     this.editingDonorId = null;
   }
@@ -69,20 +89,20 @@ export class DonorManagement implements OnInit {
     write.subscribe({
       next: (response) => {
         if (!response.success) {
-          this.actionError = response.message || 'management.saveFailed';
+          this.actionError = 'management.saveFailed';
           this.saving = false;
           return;
         }
 
-        this.actionSuccess = 'management.saveSuccess';
+        this.actionSuccess = hasApiResponseMessage(response) ? '' : 'management.saveSuccess';
         this.saving = false;
         this.formOpen = false;
         this.editingDonorId = null;
         this.loadDonors();
         this.actionSuccess = '';
       },
-      error: (error: unknown) => {
-        this.actionError = this.readServerMessage(error) || 'management.saveFailed';
+      error: () => {
+        this.actionError = 'management.saveFailed';
         this.saving = false;
       },
     });
@@ -95,6 +115,9 @@ export class DonorManagement implements OnInit {
   }
 
   cancelDelete(): void {
+    if (this.saving) {
+      return;
+    }
     this.deleteConfirmationId = null;
   }
 
@@ -108,38 +131,37 @@ export class DonorManagement implements OnInit {
     this.donorService.deleteDonor(donorId).subscribe({
       next: (response) => {
         if (!response.success) {
-          this.actionError = response.message || 'management.deleteFailed';
+          this.actionError = 'management.deleteFailed';
           this.saving = false;
           return;
         }
 
-        this.actionSuccess = 'management.deleteSuccess';
+        this.actionSuccess = hasApiResponseMessage(response) ? '' : 'management.deleteSuccess';
         this.deleteConfirmationId = null;
         this.saving = false;
         this.loadDonors();
       },
-      error: (error: unknown) => {
-        this.actionError = this.readServerMessage(error) || 'management.deleteFailed';
+      error: () => {
+        this.actionError = 'management.deleteFailed';
         this.saving = false;
       },
     });
   }
 
-  private loadDonors(): void {
+  loadDonors(): void {
     this.loading = true;
     this.loadError = '';
     this.donorService.getAllDonors().subscribe({
       next: (response) => {
         if (!response.success) {
-          this.loadError = response.message || 'management.loadFailed';
-          this.donors = [];
+          this.loadError = this.donors.length ? 'management.refreshFailed' : 'management.loadFailed';
         } else {
           this.donors = response.data ?? [];
         }
         this.loading = false;
       },
-      error: (error: unknown) => {
-        this.loadError = this.readServerMessage(error) || 'management.loadFailed';
+      error: () => {
+        this.loadError = this.donors.length ? 'management.refreshFailed' : 'management.loadFailed';
         this.loading = false;
       },
     });
@@ -158,17 +180,5 @@ export class DonorManagement implements OnInit {
     this.actionError = '';
     this.actionSuccess = '';
     this.deleteConfirmationId = null;
-  }
-
-  private readServerMessage(error: unknown): string | null {
-    if (typeof error !== 'object' || error === null || !('error' in error)) {
-      return null;
-    }
-
-    const body = error.error;
-    return typeof body === 'object' && body !== null && 'message' in body &&
-      typeof body.message === 'string'
-      ? body.message
-      : null;
   }
 }

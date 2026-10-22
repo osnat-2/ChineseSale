@@ -1,16 +1,57 @@
 <main class="detail-page">
-  <a routerLink="/catalog" class="back-link">{{ 'detail.back' | translate }}</a>
+  <a routerLink="/catalog" [queryParams]="backQueryParams" class="back-link">{{ 'detail.back' | translate }}</a>
   <p *ngIf="loading" class="state" role="status">{{ 'detail.loading' | translate }}</p>
-  <p *ngIf="!loading && errorMessage" class="state state-error" role="alert">{{ errorMessage | translate }}</p>
+  <div *ngIf="!loading && errorMessage" class="state state-error" role="alert">
+    <p>{{ errorMessage | translate }}</p>
+    <button *ngIf="errorMessage === 'detail.loadFailed'" type="button" (click)="retryLoad()">
+      {{ 'detail.retry' | translate }}
+    </button>
+  </div>
 
   <article *ngIf="!loading && present" class="detail-layout">
-    <img [src]="present.imageUrl || 'assets/images/present-placeholder.svg'" [alt]="present.name" (error)="imageFallback($event)" />
+    <img [src]="(present.imageUrl || 'assets/present-placeholder.svg') | presentImageUrl" [alt]="present.name" (error)="imageFallback($event)" />
     <div>
       <p class="eyebrow">{{ 'detail.featured' | translate }}</p>
       <h1><bdi>{{ present.name }}</bdi></h1>
+      <p class="present-category">
+        <span>{{ 'catalog.category' | translate }}:</span>
+        <bdi>{{ present.categoryName || ('catalog.categoryUnavailable' | translate) }}</bdi>
+      </p>
       <p class="description"><bdi>{{ present.description }}</bdi></p>
       <p class="price">{{ present.price | localizedCurrency }}</p>
-      <p class="availability"><bdi>{{ present.quantity | localizedNumber }}</bdi> {{ 'detail.available' | translate }}</p>
+      <p class="availability"><bdi>{{ present.quantity | localizedNumber }}</bdi> {{ 'detail.winnerCount' | translate }}</p>
+      <div *ngIf="isAuthenticated()" class="detail-purchase">
+        <label>
+          {{ 'detail.quantityFor' | translate:{name: present.name} }}
+          <input
+            type="number"
+            name="quantity"
+            min="1"
+            [max]="maximumQuantity"
+            step="1"
+            [(ngModel)]="quantity"
+            required
+            [attr.aria-label]="'detail.quantityFor' | translate:{name: present.name}" />
+        </label>
+        <p *ngIf="!isQuantityValid" class="quantity-error">{{ 'card.invalidQuantity' | translate }}</p>
+        <button
+          type="button"
+          [disabled]="submitting || !isQuantityValid"
+          [attr.aria-busy]="submitting"
+          [attr.aria-label]="'detail.addToBasketFor' | translate:{name: present.name}"
+          (click)="addPresentToBasket()">
+          {{ submitting ? ('detail.addingToBasket' | translate) : ('detail.addToBasket' | translate) }}
+        </button>
+      </div>
+      <a
+        *ngIf="!isAuthenticated()"
+        class="detail-sign-in"
+        routerLink="/login"
+        [queryParams]="{ returnUrl: router.url }">
+        {{ 'detail.signInToAdd' | translate }}
+      </a>
+      <p *ngIf="addSuccessMessage" role="status">{{ addSuccessMessage | translate }}</p>
+      <p *ngIf="addErrorMessage" role="alert">{{ addErrorMessage | translate }}</p>
     </div>
   </article>
 </main>

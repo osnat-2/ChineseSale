@@ -16,9 +16,9 @@ namespace Project
                 .ForMember(destination => destination.CreatedAt, options => options.Ignore())
                 .ForMember(destination => destination.UpdatedAt, options => options.Ignore())
                 .ForMember(destination => destination.CreatedBy, options => options.Ignore())
-                .ForMember(destination => destination.Present, options => options.Ignore());
+                .ForMember(destination => destination.Present, options => options.Ignore())
             // .ForMember(destination => destination.IsPaid, options => options.MapFrom(_ => false))
-            // .ForMember(destination => destination.CreatedAt, options => options.MapFrom(_ => DateTime.UtcNow));
+            .ForMember(destination => destination.CreatedAt, options => options.MapFrom(_ => DateTime.UtcNow));
         }
     }
 }

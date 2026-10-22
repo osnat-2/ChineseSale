@@ -68,7 +68,7 @@ namespace Project.Bll
 
             // יצירת טוקן JWT
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_jwtSettings.SecretKey);
+            var key = Encoding.UTF8.GetBytes(_jwtSettings.SecretKey);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new Claim[] {
@@ -165,6 +165,108 @@ namespace Project.Bll
             }
 
             return _userDal.DeleteDonorAsync(id);
+        }
+
+        public Task<Result<User>> GetAllManagedUsersAsync() =>
+            _userDal.GetAllManagedUsersAsync();
+
+        public async Task<Result<User>> CreateManagedUserAsync(
+            ManagedUserCreateDto userDto,
+            int createdBy)
+        {
+            if (userDto == null ||
+                createdBy <= 0 ||
+                !Validator.ValidateData(userDto.Name, userDto.Email, userDto.Phone) ||
+                string.IsNullOrWhiteSpace(userDto.Password) ||
+                userDto.Password.Length is < 4 or > 72 ||
+                userDto.RoleId <= 0)
+            {
+                return new Result<User>
+                {
+                    Success = false,
+                    Message = "Valid user details, password, role, and authenticated creator are required.",
+                    Data = null
+                };
+            }
+
+            var role = await _userDal.GetRoleById(userDto.RoleId);
+            if (role == null || !role.IsActive)
+            {
+                return new Result<User>
+                {
+                    Success = false,
+                    Message = "An active role must be selected.",
+                    Data = null
+                };
+            }
+
+            var user = new User
+            {
+                Name = userDto.Name.Trim(),
+                Phone = userDto.Phone.Trim(),
+                Email = userDto.Email.Trim(),
+                Password = BCrypt.Net.BCrypt.HashPassword(userDto.Password),
+                RoleId = role.Id,
+                Role = role,
+                IsActive = true,
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = createdBy
+            };
+            return await _userDal.CreateManagedUserAsync(user);
+        }
+
+        public async Task<Result<User>> UpdateManagedUserAsync(int id, ManagedUserUpdateDto userDto)
+        {
+            if (id <= 0 ||
+                userDto == null ||
+                !Validator.ValidateData(userDto.Name, userDto.Email, userDto.Phone) ||
+                userDto.RoleId <= 0)
+            {
+                return new Result<User>
+                {
+                    Success = false,
+                    Message = "Valid user details and role are required.",
+                    Data = null
+                };
+            }
+
+            var role = await _userDal.GetRoleById(userDto.RoleId);
+            if (role == null || !role.IsActive)
+            {
+                return new Result<User>
+                {
+                    Success = false,
+                    Message = "An active role must be selected.",
+                    Data = null
+                };
+            }
+
+            var details = new User
+            {
+                Name = userDto.Name.Trim(),
+                Phone = userDto.Phone.Trim(),
+                Email = userDto.Email.Trim(),
+                RoleId = role.Id,
+                Role = role,
+                IsActive = userDto.IsActive
+            };
+            return await _userDal.UpdateManagedUserAsync(id, details);
+        }
+
+        public Task<Result<User>> DeleteManagedUserAsync(int id)
+        {
+            if (id <= 0)
+            {
+                return Task.FromResult(new Result<User>
+                {
+                    Success = false,
+                    Message = "Invalid user id.",
+                    Data = null
+                });
+            }
+
+            return _userDal.DeleteManagedUserAsync(id);
         }
 
         private async Task<Result<User>> AddPrivilegedUserAsync(UserDto userDto, string roleName)

@@ -18,6 +18,10 @@ export type PresentInput = Pick<
   'name' | 'description' | 'donorId' | 'categoryId' | 'imageUrl' | 'quantity' | 'price'
 >;
 
+export interface PresentImageUpload {
+  imageUrl: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -38,6 +42,10 @@ export class PresentService {
     return this.httpClient.get<Result<presentModel>>(`${this.url}/getAllPresents`, { params });
   }
 
+  getMyDonatedPresents(): Observable<Result<presentModel>> {
+    return this.httpClient.get<Result<presentModel>>(`${this.url}/myPresents`);
+  }
+
   getPresentById(id: number): Observable<Result<presentModel>> {
     return this.httpClient.get<Result<presentModel>>(`${this.url}/${id}`);
   }
@@ -48,6 +56,12 @@ export class PresentService {
 
   updatePresent(id: number, present: PresentInput): Observable<Result<presentModel>> {
     return this.httpClient.put<Result<presentModel>>(`${this.url}/updatePresent/${id}`, present);
+  }
+
+  uploadPresentImage(image: File): Observable<Result<PresentImageUpload>> {
+    const body = new FormData();
+    body.append('image', image, image.name);
+    return this.httpClient.post<Result<PresentImageUpload>>(`${this.url}/uploadImage`, body);
   }
 
   deletePresent(id: number): Observable<Result<presentModel>> {

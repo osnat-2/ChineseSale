@@ -1,10 +1,115 @@
 <main class="purchase-page">
-	<a routerLink="/home">{{ 'personal.back' | translate }}</a>
-	<h1>{{ 'personal.title' | translate }}</h1>
-	<p *ngIf="loading" role="status">{{ 'personal.loading' | translate }}</p>
-	<p *ngIf="errorMessage" role="alert">{{ errorMessage | translate }}</p>
-	<p *ngIf="!loading && !errorMessage && cards.length === 0">{{ 'personal.empty' | translate }}</p>
-	<ul *ngIf="!loading && cards.length">
-		<li *ngFor="let card of cards">{{ 'personal.reference' | translate:{cardId: card.id, presentId: card.presentId} }}</li>
-	</ul>
+  <a routerLink="/home">{{ 'personal.back' | translate }}</a>
+  <h1>{{ 'personal.title' | translate }}</h1>
+
+  <section class="personal-section profile-section" aria-labelledby="personal-details-heading">
+    <h2 id="personal-details-heading">{{ 'personal.details' | translate }}</h2>
+    <div class="profile-overview">
+      <div class="profile-avatar" aria-hidden="true">{{ profileInitials || '?' }}</div>
+      <div class="profile-identity">
+        <h3>{{ profile.name || ('personal.notProvided' | translate) }}</h3>
+      </div>
+    </div>
+    <dl class="personal-details">
+      <div>
+        <dt>{{ 'personal.email' | translate }}</dt>
+        <dd>{{ profile.email || ('personal.notProvided' | translate) }}</dd>
+      </div>
+      <div>
+        <dt>{{ 'personal.phone' | translate }}</dt>
+        <dd>{{ profile.phone || ('personal.notProvided' | translate) }}</dd>
+      </div>
+    </dl>
+    <p class="profile-readonly-note">{{ 'personal.readonlyNote' | translate }}</p>
+  </section>
+
+  <section *ngIf="isDonor" class="personal-section" aria-labelledby="personal-donated-presents-heading">
+    <h2 id="personal-donated-presents-heading">{{ 'personal.donatedPresents' | translate }}</h2>
+    <p *ngIf="loadingDonatedPresents && !donatedPresents.length" role="status">
+      {{ 'personal.donatedLoading' | translate }}
+    </p>
+    <p *ngIf="loadingDonatedPresents && donatedPresents.length" role="status" aria-live="polite">
+      {{ 'personal.donatedRefreshing' | translate }}
+    </p>
+    <div *ngIf="donatedPresentError" class="purchase-message purchase-error" role="alert">
+      <span>{{ donatedPresentError | translate }}</span>
+      <button type="button" (click)="loadDonatedPresents()" [disabled]="loadingDonatedPresents">
+        {{ 'personal.retry' | translate }}
+      </button>
+    </div>
+    <p *ngIf="!loadingDonatedPresents && !donatedPresentError && donatedPresents.length === 0">
+      {{ 'personal.noDonatedPresents' | translate }}
+    </p>
+    <ul *ngIf="donatedPresents.length" class="personal-card-list" [attr.aria-busy]="loadingDonatedPresents">
+      <li *ngFor="let present of donatedPresents">
+        <div>
+          <h3>{{ present.name || ('personal.presentUnavailable' | translate) }}</h3>
+          <p class="present-category">
+            <span>{{ 'catalog.category' | translate }}:</span>
+            <bdi>{{ present.categoryName || ('catalog.categoryUnavailable' | translate) }}</bdi>
+          </p>
+          <p *ngIf="present.description">{{ present.description }}</p>
+          <span>{{ 'personal.donatedQuantity' | translate:{count: present.quantity} }}</span>
+        </div>
+        <span *ngIf="!present.isActive" class="personal-card-status">
+          {{ 'personal.inactivePresent' | translate }}
+        </span>
+      </li>
+    </ul>
+  </section>
+
+  <section *ngIf="!isDonor" class="personal-section" aria-labelledby="personal-cards-heading">
+    <div class="personal-section-heading">
+      <h2 id="personal-cards-heading">{{ 'personal.cards' | translate }}</h2>
+      <div class="personal-actions">
+        <a routerLink="/card">{{ 'personal.manageCards' | translate }}</a>
+        <a *ngIf="unpaidCardSummaries.length" routerLink="/payment">{{ 'personal.checkout' | translate }}</a>
+      </div>
+    </div>
+    <p *ngIf="loading && !hasCardData" role="status">{{ 'personal.loading' | translate }}</p>
+    <p *ngIf="loading && hasCardData" role="status" aria-live="polite">{{ 'personal.refreshing' | translate }}</p>
+    <div *ngIf="errorMessage" class="purchase-message purchase-error" role="alert">
+      <span>{{ errorMessage | translate }}</span>
+      <button type="button" (click)="loadCards()" [disabled]="loading">{{ 'personal.retry' | translate }}</button>
+    </div>
+    <p *ngIf="!loading && !errorMessage && paidCardSummaries.length === 0 && unpaidCardSummaries.length === 0">
+      {{ 'personal.empty' | translate }}
+    </p>
+    <div *ngIf="hasCardData" class="personal-summary" [attr.aria-busy]="loading">
+      <section *ngIf="hasPaidCards()" aria-labelledby="paid-cards-heading">
+        <h3 id="paid-cards-heading">{{ 'personal.paidCards' | translate }}</h3>
+        <p *ngIf="paidCardSummaries.length === 0">{{ 'personal.noPaidCards' | translate }}</p>
+        <ul *ngIf="paidCardSummaries.length" class="personal-card-list">
+          <li *ngFor="let summary of paidCardSummaries">
+            <div>
+              <h4>{{ summary.presentName || ('personal.presentUnavailable' | translate) }}</h4>
+              <p class="present-category">
+                <span>{{ 'catalog.category' | translate }}:</span>
+                <bdi>{{ summary.categoryName || ('catalog.categoryUnavailable' | translate) }}</bdi>
+              </p>
+              <span>{{ 'personal.cardCount' | translate:{count: summary.count} }}</span>
+            </div>
+            <span class="personal-card-status is-paid">{{ 'personal.paid' | translate }}</span>
+          </li>
+        </ul>
+      </section>
+      <section *ngIf="hasUnpaidCards()" aria-labelledby="unpaid-cards-heading">
+        <h3 id="unpaid-cards-heading">{{ 'personal.unpaidCards' | translate }}</h3>
+        <p *ngIf="!hasUnpaidCards()">{{ 'personal.noUnpaidCards' | translate }}</p>
+        <ul *ngIf="unpaidCardSummaries.length" class="personal-card-list">
+          <li *ngFor="let summary of unpaidCardSummaries">
+            <div>
+              <h4>{{ summary.presentName || ('personal.presentUnavailable' | translate) }}</h4>
+              <p class="present-category">
+                <span>{{ 'catalog.category' | translate }}:</span>
+                <bdi>{{ summary.categoryName || ('catalog.categoryUnavailable' | translate) }}</bdi>
+              </p>
+              <span>{{ 'personal.cardCount' | translate:{count: summary.count} }}</span>
+            </div>
+            <span class="personal-card-status">{{ 'personal.unpaid' | translate }}</span>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </section>
 </main>

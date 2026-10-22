@@ -8,6 +8,7 @@ namespace Project.Bll.Interfaces
         Task<Result<Card>> AddCard(CardDto cardDto, int userId);
         Task<Result<Card>> GetCardsByUserAsync(int userId, bool? isPaid = null);
         Task<Result<Card>> DeleteCardAsync(int cardId, int userId);
-        Task<Result<Card>> ProcessPaymentAsync(int userId);
+        Task<Result<Card>> ProcessDevelopmentPaymentAsync(int userId, decimal amount);
+        Task<object?> GetCardsWithPresentsAsync();
     }
 }

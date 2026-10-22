@@ -1,29 +1,62 @@
 <section class="management-page">
   <header>
-    <p class="eyebrow">{{ 'management.purchaseEyebrow' | translate }}</p>
-    <h1>{{ 'management.purchaseTitle' | translate }}</h1>
+    <div>
+      <a routerLink="/admin" class="management-back-link">
+        <span class="management-back-arrow" aria-hidden="true">←</span>
+        {{ 'management.backToMenu' | translate }}
+      </a>
+      <p class="eyebrow">{{ 'management.purchaseEyebrow' | translate }}</p>
+      <h1>{{ 'management.purchaseTitle' | translate }}</h1>
+    </div>
   </header>
 
-  <div *ngIf="purchases.length === 0" class="empty-state">
-    {{ 'management.purchaseEmpty' | translate }}
-  </div>
+  <section aria-labelledby="card-activity-title">
+    <h2 id="card-activity-title">{{ 'management.cardEyebrow' | translate }}</h2>
+    <div *ngIf="cards.length === 0" class="empty-state">
+      {{ 'management.cardEmpty' | translate }}
+    </div>
 
-  <table *ngIf="purchases.length > 0">
-    <thead>
-      <tr>
-        <th>{{ 'management.customer' | translate }}</th>
-        <th>{{ 'management.ticket' | translate }}</th>
-        <th>{{ 'management.total' | translate }}</th>
-        <th>{{ 'management.status' | translate }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let purchase of purchases">
-        <td>{{ purchase.customer }}</td>
-        <td>{{ purchase.ticket }}</td>
-        <td>{{ purchase.total | localizedCurrency:'ILS' }}</td>
-        <td>{{ purchase.status }}</td>
-      </tr>
-    </tbody>
-  </table>
+    <table *ngIf="cards.length > 0">
+      <thead>
+        <tr>
+          <th>{{ 'management.user' | translate }}</th>
+          <th>{{ 'management.present' | translate }}</th>
+          <th>{{ 'management.payment' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let card of cards">
+          <td>{{ card.user }}</td>
+          <td>{{ card.present }}</td>
+          <td>{{ (card.paid ? 'management.paid' : 'management.unpaid') | translate }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section aria-labelledby="purchase-history-title">
+    <h2 id="purchase-history-title">{{ 'management.purchaseSectionTitle' | translate }}</h2>
+    <div *ngIf="purchases.length === 0" class="empty-state">
+      {{ 'management.purchaseEmpty' | translate }}
+    </div>
+
+    <table *ngIf="purchases.length > 0">
+      <thead>
+        <tr>
+          <th>{{ 'management.customer' | translate }}</th>
+          <th>{{ 'management.ticket' | translate }}</th>
+          <th>{{ 'management.total' | translate }}</th>
+          <th>{{ 'management.status' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let purchase of purchases">
+          <td>{{ purchase.customer }}</td>
+          <td>{{ purchase.ticket }}</td>
+          <td>{{ purchase.total | localizedCurrency:'ILS' }}</td>
+          <td>{{ purchase.status }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
 </section>

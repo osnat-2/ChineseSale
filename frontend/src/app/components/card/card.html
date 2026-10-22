@@ -1,20 +1,57 @@
 <main class="purchase-page">
-	<a routerLink="/catalog">{{ 'card.back' | translate }}</a>
-	<h1>{{ 'card.title' | translate }}</h1>
-	<form (ngSubmit)="addCard()">
-		<label for="presentId">{{ 'card.presentNumber' | translate }}</label>
-		<input id="presentId" name="presentId" type="number" min="1" [(ngModel)]="presentId" required>
-		<button type="submit" [disabled]="submitting || !presentId">{{ submitting ? ('card.adding' | translate) : ('card.add' | translate) }}</button>
-	</form>
-	<p *ngIf="loading" role="status">{{ 'card.loading' | translate }}</p>
-	<p *ngIf="errorMessage" role="alert">{{ errorMessage | translate }}</p>
-	<p *ngIf="successMessage" role="status">{{ successMessage | translate }}</p>
-	<p *ngIf="!loading && !errorMessage && cards.length === 0">{{ 'card.empty' | translate }}</p>
-	<ul *ngIf="!loading && cards.length">
-		<li *ngFor="let card of cards">
-			{{ 'card.reference' | translate:{cardId: card.id, presentId: card.presentId} }}
-			<button type="button" (click)="removeCard(card)" [disabled]="submitting">{{ 'card.remove' | translate }}</button>
-		</li>
-	</ul>
-	<a routerLink="/payment">{{ 'card.checkout' | translate }}</a>
+  <a routerLink="/catalog">{{ 'card.back' | translate }}</a>
+  <header class="purchase-header">
+    <p class="eyebrow">{{ 'card.eyebrow' | translate }}</p>
+    <h1>{{ 'card.title' | translate }}</h1>
+    <p>{{ 'card.intro' | translate }}</p>
+  </header>
+
+  <p *ngIf="loading && !cardGroups.length" class="purchase-state" role="status">{{ 'card.loading' | translate }}</p>
+  <p *ngIf="loading && cardGroups.length" class="purchase-state purchase-refresh" role="status" aria-live="polite">
+    {{ 'card.refreshing' | translate }}
+  </p>
+  <div *ngIf="errorMessage" class="purchase-message purchase-error" role="alert">
+    <span>{{ errorMessage | translate }}</span>
+    <button type="button" class="secondary-action" (click)="loadCards()" [disabled]="loading || submitting">
+      {{ 'card.retry' | translate }}
+    </button>
+  </div>
+  <p *ngIf="successMessage" class="purchase-message purchase-success" role="status">{{ successMessage | translate }}</p>
+
+  <section *ngIf="!loading && !errorMessage && cardGroups.length === 0" class="purchase-empty info-card">
+    <h2>{{ 'card.emptyTitle' | translate }}</h2>
+    <p>{{ 'card.empty' | translate }}</p>
+    <a class="primary-link" routerLink="/catalog">{{ 'card.browse' | translate }}</a>
+  </section>
+
+  <section *ngIf="cardGroups.length" class="card-review info-card" [attr.aria-busy]="loading || submitting">
+    <div class="card-review-heading">
+      <h2>{{ 'card.selection' | translate }}</h2>
+      <span>{{ 'card.selectedCount' | translate:{count: totalCardCount} }}</span>
+    </div>
+    <ul class="card-review-list">
+      <li *ngFor="let group of cardGroups">
+        <div class="card-present">
+          <h3><bdi>{{ group.presentName || ('card.presentUnavailable' | translate) }}</bdi></h3>
+          <p class="present-category">
+            <span>{{ 'catalog.category' | translate }}:</span>
+            <bdi>{{ group.categoryName || ('catalog.categoryUnavailable' | translate) }}</bdi>
+          </p>
+          <p>{{ 'card.cardCount' | translate:{count: group.cards.length} }}</p>
+        </div>
+        <button
+          type="button"
+          class="remove-card-action"
+          (click)="removeCard(group)"
+          [disabled]="submitting || loading"
+          [attr.aria-label]="'card.removeOneFor' | translate:{name: group.presentName || ('card.presentUnavailable' | translate)}">
+          {{ 'card.removeOne' | translate }}
+        </button>
+      </li>
+    </ul>
+    <div class="card-review-actions">
+      <a routerLink="/catalog">{{ 'card.browse' | translate }}</a>
+      <a class="primary-link" routerLink="/payment">{{ 'card.checkout' | translate }}</a>
+    </div>
+  </section>
 </main>

@@ -4,6 +4,7 @@ using Project.Dal.Interfaces;
 using Project.Models;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -293,16 +294,27 @@ namespace Project.Dal
         //}
         public async Task<Result<Card>> AddCard(Card card)
         {
+            return await AddCards(new[] { card });
+        }
+
+        public async Task<Result<Card>> AddCards(IReadOnlyCollection<Card> cards)
+        {
             try
             {
-                var present = await dbContext.Present.FirstOrDefaultAsync(p => p.Id == card.PresentId && p.IsActive);
+                if (cards.Count == 0 || cards.Select(card => card.PresentId).Distinct().Count() != 1)
+                {
+                    return new Result<Card> { Success = false, Message = "Cards must belong to one present.", Data = null };
+                }
+
+                var presentId = cards.First().PresentId;
+                var present = await dbContext.Present.FirstOrDefaultAsync(p => p.Id == presentId && p.IsActive);
                 if (present == null)
                 {
                     return new Result<Card> { Success = false, Message = "Present is unavailable.", Data = null };
                 }
 
                 // Prevent purchase if a winner has already been drawn for this present
-                var raffleExists = await dbContext.Winner.AnyAsync(w => w.PresentId == card.PresentId);
+                var raffleExists = await dbContext.Winner.AnyAsync(w => w.PresentId == presentId);
                 if (raffleExists)
                 {
                     return new Result<Card>
@@ -313,20 +325,16 @@ namespace Project.Dal
                     };
                 }
 
-                var reservedCount = await dbContext.Card.CountAsync(c => c.PresentId == card.PresentId && !c.IsDeleted);
-                if (reservedCount >= present.Quantity)
-                {
-                    return new Result<Card> { Success = false, Message = "Present is sold out.", Data = null };
-                }
-
-                dbContext.Card.Add(card);
-                await dbContext.SaveChangesAsync();  // שמירה במסד הנתונים
+                dbContext.Card.AddRange(cards);
+                await dbContext.SaveChangesAsync();
 
                 return new Result<Card>
                 {
                     Success = true,
-                    Message = "New card created successfully.",
-                    Data = new[] { card }
+                    Message = cards.Count == 1
+                        ? "New card created successfully."
+                        : $"{cards.Count} cards created successfully.",
+                    Data = cards.ToArray()
                 };
             }
             catch (Exception ex)
@@ -345,7 +353,7 @@ namespace Project.Dal
         {
             var query = dbContext.Card
                 .Include(card => card.Present)
-                .Where(card => card.CreatedBy == userId);
+                .Where(card => card.CreatedBy == userId && card.IsActive && !card.IsDeleted);
             if (isPaid.HasValue)
             {
                 query = query.Where(card => card.IsPaid == isPaid.Value);
@@ -374,22 +382,66 @@ namespace Project.Dal
             return new Result<Card> { Success = true, Message = "Card removed successfully.", Data = new[] { card } };
         }
 
-        public async Task<Result<Card>> ProcessPaymentAsync(int userId)
+        public async Task<Result<Card>> ProcessDevelopmentPaymentAsync(int userId, decimal amount)
         {
-            var cards = await dbContext.Card.Where(card => card.CreatedBy == userId).ToListAsync();
+            await using var transaction = dbContext.Database.IsRelational()
+                ? await dbContext.Database.BeginTransactionAsync(IsolationLevel.Serializable)
+                : null;
+
+            var cards = await dbContext.Card
+                .Include(card => card.Present)
+                .Where(card =>
+                    card.CreatedBy == userId &&
+                    card.IsActive &&
+                    !card.IsDeleted &&
+                    card.Present.IsActive &&
+                    !card.Present.IsDeleted)
+                .ToListAsync();
             if (cards.Count == 0)
             {
                 return new Result<Card> { Success = false, Message = "No cards found for this user.", Data = null };
             }
 
-            foreach (var card in cards)
+            var unpaidCards = cards.Where(card => !card.IsPaid).ToList();
+            if (unpaidCards.Count == 0)
+            {
+                return new Result<Card>
+                {
+                    Success = true,
+                    Message = "All cards have already been paid.",
+                    Data = cards
+                };
+            }
+
+            var expectedAmount = unpaidCards.Sum(card => (decimal)card.Present.Price);
+            if (amount != expectedAmount)
+            {
+                return new Result<Card>
+                {
+                    Success = false,
+                    Message = "The submitted amount does not match the current unpaid-card total.",
+                    Data = null
+                };
+            }
+
+            var now = DateTime.UtcNow;
+            foreach (var card in unpaidCards)
             {
                 card.IsPaid = true;
-                card.UpdatedAt = DateTime.UtcNow;
+                card.UpdatedAt = now;
             }
 
             await dbContext.SaveChangesAsync();
-            return new Result<Card> { Success = true, Message = "Payment processed successfully.", Data = cards };
+            if (transaction != null)
+            {
+                await transaction.CommitAsync();
+            }
+            return new Result<Card>
+            {
+                Success = true,
+                Message = "Development payment processed successfully.",
+                Data = unpaidCards
+            };
         }
     }
 }

@@ -89,6 +89,8 @@ namespace Project.Bll
 
             // Map DTO to model
             var category = _mapper.Map<Category>(categoryDto);
+            category.IsActive = categoryDto.IsActive;
+            category.IsDeleted = false;
             return await _categoryDal.CreateCategoryAsync(category);
         }
 
@@ -164,6 +166,7 @@ namespace Project.Bll
             // Map DTO to model and update ID
             var category = _mapper.Map<Category>(categoryDto);
             category.Id = id;
+            category.IsActive = categoryDto.IsActive;
             return await _categoryDal.UpdateCategoryAsync(category);
         }
 

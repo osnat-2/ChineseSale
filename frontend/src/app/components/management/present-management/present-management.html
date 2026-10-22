@@ -1,6 +1,10 @@
 <section class="management-page">
   <header class="management-header">
     <div>
+      <a routerLink="/admin" class="management-back-link">
+        <span class="management-back-arrow" aria-hidden="true">←</span>
+        {{ 'management.backToMenu' | translate }}
+      </a>
       <p class="eyebrow">{{ 'management.presentEyebrow' | translate }}</p>
       <h1>{{ 'management.presentTitle' | translate }}</h1>
     </div>
@@ -9,85 +13,143 @@
     </button>
   </header>
 
-  <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
+  <p *ngIf="actionError && !formOpen && deleteConfirmationId === null" class="state-message error" role="alert">{{ actionError | translate }}</p>
   <p *ngIf="actionSuccess" class="state-message success" role="status">{{ actionSuccess | translate }}</p>
-  <p *ngIf="loadError" class="state-message error" role="alert">{{ loadError | translate }}</p>
-  <p *ngIf="referenceError" class="state-message error" role="alert">{{ referenceError | translate }}</p>
+  <div *ngIf="loadError" class="state-message error" role="alert">
+    <span>{{ loadError | translate }}</span>
+    <button type="button" class="secondary-action" (click)="loadPresents()" [disabled]="loadingPresents">
+      {{ 'management.retry' | translate }}
+    </button>
+  </div>
+  <div *ngIf="referenceError && !formOpen" class="state-message error" role="alert">
+    <span>{{ referenceError | translate }}</span>
+    <button type="button" class="secondary-action" (click)="retryFormReferences()" [disabled]="loadingReferences">
+      {{ 'management.retry' | translate }}
+    </button>
+  </div>
 
-  <form *ngIf="formOpen" #presentForm="ngForm" class="management-form" (ngSubmit)="savePresent(presentForm)">
-    <h2>{{ (editingPresentId === null ? 'forms.addPresent' : 'forms.editPresent') | translate }}</h2>
+  <div *ngIf="formOpen" class="management-modal-backdrop">
+    <section
+      class="management-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="present-form-title"
+      tabindex="-1"
+      cdkTrapFocus
+      [cdkTrapFocusAutoCapture]="true"
+      (keydown.escape)="closeForm()">
+      <div class="management-modal-header">
+        <h2 id="present-form-title">{{ (editingPresentId === null ? 'forms.addPresent' : 'forms.editPresent') | translate }}</h2>
+        <button type="button" class="management-modal-close" [attr.aria-label]="'management.cancel' | translate" (click)="closeForm()">×</button>
+      </div>
+      <form #presentForm="ngForm" class="management-form" (ngSubmit)="savePresent(presentForm)">
+        <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
 
-    <label>
-      {{ 'management.name' | translate }}
-      <input name="name" [(ngModel)]="formValue.name" required minlength="1" maxlength="100" pattern=".*\S.*">
-    </label>
+        <label>
+          {{ 'management.name' | translate }}
+          <input name="name" [(ngModel)]="formValue.name" required minlength="1" maxlength="100" pattern=".*\S.*" cdkFocusInitial>
+        </label>
 
-    <label>
-      {{ 'management.description' | translate }}
-      <textarea name="description" [(ngModel)]="formValue.description" required maxlength="2000" pattern=".*\S.*" rows="4"></textarea>
-    </label>
+        <label>
+          {{ 'management.description' | translate }}
+          <textarea name="description" [(ngModel)]="formValue.description" required maxlength="2000" pattern=".*\S.*" rows="4"></textarea>
+        </label>
 
-    <label>
-      {{ 'management.donor' | translate }}
-      <select name="donorId" [(ngModel)]="formValue.donorId" required>
-        <option [ngValue]="null" disabled>{{ 'management.chooseDonor' | translate }}</option>
-        <option *ngFor="let donor of donors" [ngValue]="donor.id" [disabled]="!donor.isActive && donor.id !== formValue.donorId">
-          {{ donor.name }}{{ donor.isActive ? '' : ' (' + ('management.inactive' | translate) + ')' }}
-        </option>
-      </select>
-    </label>
+        <label>
+          {{ 'management.donor' | translate }}
+          <select name="donorId" [(ngModel)]="formValue.donorId" required>
+            <option [ngValue]="null" disabled>{{ 'management.chooseDonor' | translate }}</option>
+            <option *ngFor="let donor of donors" [ngValue]="donor.id" [disabled]="!donor.isActive && donor.id !== formValue.donorId">
+              {{ donor.name }}{{ donor.isActive ? '' : ' (' + ('management.inactive' | translate) + ')' }}
+            </option>
+          </select>
+        </label>
 
-    <label>
-      {{ 'management.category' | translate }}
-      <select name="categoryId" [(ngModel)]="formValue.categoryId" required>
-        <option [ngValue]="null" disabled>{{ 'management.chooseCategory' | translate }}</option>
-        <option
-          *ngFor="let category of categories"
-          [ngValue]="category.id"
-          [disabled]="!category.isActive && category.id !== formValue.categoryId">
-          {{ category.name }}
-        </option>
-      </select>
-    </label>
+        <label>
+          {{ 'management.category' | translate }}
+          <select name="categoryId" [(ngModel)]="formValue.categoryId" required>
+            <option [ngValue]="null" disabled>{{ 'management.chooseCategory' | translate }}</option>
+            <option
+              *ngFor="let category of categories"
+              [ngValue]="category.id"
+              [disabled]="!category.isActive && category.id !== formValue.categoryId">
+              {{ category.name }}
+            </option>
+          </select>
+        </label>
 
-    <label>
-      {{ 'management.imageUrl' | translate }}
-      <input name="imageUrl" type="url" [(ngModel)]="formValue.imageUrl" required maxlength="2048" pattern="https?://.+">
-    </label>
+        <label>
+          {{ 'management.imageUrl' | translate }}
+          <input
+            name="presentImage"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            [required]="imageIsRequired"
+            (change)="onImageSelected($event)">
+        </label>
+        <p>{{ 'management.imageUploadHint' | translate }}</p>
+        <img
+          *ngIf="imagePreviewUrl"
+          class="present-image-preview"
+          [src]="(imagePreviewUrl | presentImageUrl)"
+          [alt]="'management.imagePreview' | translate">
 
-    <div class="form-grid">
-      <label>
-        {{ 'management.quantity' | translate }}
-        <input name="quantity" type="number" [(ngModel)]="formValue.quantity" required min="1" max="2147483647" step="1">
-      </label>
-      <label>
-        {{ 'management.price' | translate }}
-        <input name="price" type="number" [(ngModel)]="formValue.price" required min="0" max="2147483647" step="1">
-      </label>
-    </div>
+        <div class="form-grid">
+          <label>
+            {{ 'management.quantity' | translate }}
+            <input name="quantity" type="number" [(ngModel)]="formValue.quantity" required min="1" max="2147483647" step="1">
+          </label>
+          <label>
+            {{ 'management.price' | translate }}
+            <input name="price" type="number" [(ngModel)]="formValue.price" required min="0" max="2147483647" step="1">
+          </label>
+        </div>
+        <p>{{ 'management.quantityHint' | translate }}</p>
 
-    <p *ngIf="loadingReferences" class="state-message">{{ 'management.loadingReferences' | translate }}</p>
-    <p *ngIf="!loadingReferences && (!donors.length || !categories.length)" class="state-message error" role="alert">
-      {{ 'management.referenceRequired' | translate }}
-    </p>
+        <p *ngIf="loadingReferences" class="state-message">{{ 'management.loadingReferences' | translate }}</p>
+        <div *ngIf="referenceError" class="state-message error" role="alert">
+          <span>{{ referenceError | translate }}</span>
+          <button type="button" class="secondary-action" (click)="retryFormReferences()" [disabled]="loadingReferences">
+            {{ 'management.retry' | translate }}
+          </button>
+        </div>
+        <p *ngIf="!loadingReferences && (!donors.length || !categories.length)" class="state-message error" role="alert">
+          {{ 'management.referenceRequired' | translate }}
+        </p>
 
-    <div class="form-actions">
-      <button type="submit" class="primary-action" [disabled]="presentForm.invalid || saving || !donors.length || !categories.length">
-        {{ (saving ? 'management.saving' : 'management.save') | translate }}
-      </button>
-      <button type="button" class="secondary-action" (click)="closeForm()">
-        {{ 'management.cancel' | translate }}
-      </button>
-    </div>
-  </form>
+        <div class="form-actions">
+          <button type="submit" class="primary-action" [disabled]="presentForm.invalid || (imageIsRequired && !selectedImageFile) || saving || loadingReferences || !donors.length || !categories.length">
+            {{ (saving ? 'management.saving' : 'management.save') | translate }}
+          </button>
+          <button type="button" class="secondary-action" [disabled]="saving" (click)="closeForm()">
+            {{ 'management.cancel' | translate }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
 
-  <p *ngIf="loadingPresents" class="state-message">{{ 'management.loading' | translate }}</p>
+  <p *ngIf="loadingPresents && !presents.length" class="state-message" role="status">{{ 'management.loading' | translate }}</p>
+  <p *ngIf="loadingPresents && presents.length" class="state-message" role="status" aria-live="polite">{{ 'management.refreshing' | translate }}</p>
   <p *ngIf="!loadingPresents && !loadError && presents.length === 0" class="empty-state">
     {{ 'management.presentEmpty' | translate }}
   </p>
 
-  <div *ngIf="!loadingPresents && presents.length > 0" class="management-cards">
-    <article *ngFor="let present of presents" class="management-card">
+  <div *ngIf="presents.length > 0" class="management-search" [attr.aria-busy]="loadingPresents">
+    <label for="present-search">{{ 'management.searchRecords' | translate }}</label>
+    <div class="management-search-controls">
+      <input id="present-search" type="search" [(ngModel)]="searchTerm" [placeholder]="'management.searchPlaceholder' | translate">
+      <button *ngIf="searchTerm" type="button" class="secondary-action" (click)="clearSearch()">
+        {{ 'management.clearSearch' | translate }}
+      </button>
+    </div>
+  </div>
+  <p *ngIf="!loadingPresents && !loadError && presents.length > 0 && !filteredPresents.length" class="empty-state">
+    {{ 'management.noSearchResults' | translate }}
+  </p>
+
+  <div *ngIf="filteredPresents.length > 0" class="management-cards" [attr.aria-busy]="loadingPresents">
+    <article *ngFor="let present of filteredPresents" class="management-card">
       <div class="card-heading">
         <h2>{{ present.name }}</h2>
         <span class="status" [class.inactive]="!present.isActive">
@@ -96,7 +158,7 @@
       </div>
       <p>{{ present.description }}</p>
       <dl>
-        <div><dt>{{ 'management.category' | translate }}</dt><dd>{{ categoryName(present.categoryId) }}</dd></div>
+        <div><dt>{{ 'management.category' | translate }}</dt><dd>{{ categoryName(present) || ('catalog.categoryUnavailable' | translate) }}</dd></div>
         <div><dt>{{ 'management.quantity' | translate }}</dt><dd>{{ present.quantity }}</dd></div>
         <div><dt>{{ 'management.price' | translate }}</dt><dd>{{ present.price | localizedCurrency:'ILS' }}</dd></div>
       </dl>
@@ -108,17 +170,25 @@
           {{ 'management.delete' | translate }}
         </button>
       </div>
-      <div *ngIf="deleteConfirmationId === present.id" class="confirmation" role="alertdialog">
-        <p>{{ 'management.confirmDeletePresent' | translate }}</p>
-        <div class="card-actions">
-          <button type="button" class="danger-action" [disabled]="saving" (click)="deletePresent(present.id)">
-            {{ 'management.confirm' | translate }}
-          </button>
-          <button type="button" class="secondary-action" [disabled]="saving" (click)="cancelDelete()">
-            {{ 'management.cancel' | translate }}
-          </button>
-        </div>
-      </div>
     </article>
+  </div>
+
+  <div *ngIf="deleteConfirmationId as presentId" class="management-modal-backdrop">
+    <section class="management-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-present-title" tabindex="-1" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="cancelDelete()">
+      <div class="management-modal-header">
+        <h2 id="delete-present-title">{{ 'management.delete' | translate }} {{ 'management.present' | translate }}</h2>
+        <button type="button" class="management-modal-close" autofocus [attr.aria-label]="'management.cancel' | translate" [disabled]="saving" (click)="cancelDelete()">×</button>
+      </div>
+      <p>{{ 'management.confirmDeletePresent' | translate }}</p>
+      <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
+      <div class="form-actions">
+        <button type="button" class="danger-action" [disabled]="saving" (click)="deletePresent(presentId)">
+          {{ (saving ? 'management.saving' : 'management.confirm') | translate }}
+        </button>
+        <button type="button" class="secondary-action" [disabled]="saving" (click)="cancelDelete()">
+          {{ 'management.cancel' | translate }}
+        </button>
+      </div>
+    </section>
   </div>
 </section>

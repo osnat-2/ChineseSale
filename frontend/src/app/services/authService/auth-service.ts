@@ -3,7 +3,11 @@ import { computed, Injectable, signal } from '@angular/core';
 export interface AuthTokenClaims {
   sub?: string;
   name?: string;
+  unique_name?: string;
   email?: string;
+  phone_number?: string;
+  mobile_phone?: string;
+  phone?: string;
   role?: string | string[];
   exp?: number;
   [claim: string]: unknown;
@@ -12,12 +16,12 @@ export interface AuthTokenClaims {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly tokenKey = 'authToken';
-  private readonly tokenSignal = signal<string | null>(this.readToken());
+  private readonly tokenSignal = signal<string>(this.readToken());
   readonly isAuthenticated = computed(() => this.getClaims() !== null);
 
-  getToken(): string | null {
+  getToken(): string {
     const token = this.tokenSignal();
-    return this.isValidToken(token) ? token : null;
+    return this.isValidToken(token) ? token : '';
   }
 
   setToken(token: string): void {
@@ -33,7 +37,7 @@ export class AuthService {
     if (this.isBrowser()) {
       localStorage.removeItem(this.tokenKey);
     }
-    this.tokenSignal.set(null);
+    this.tokenSignal.set('');
   }
 
   logout(): void {
@@ -67,6 +71,14 @@ export class AuthService {
     return this.hasRole('Admin');
   }
 
+  isUser(): boolean {
+    return this.hasRole('User');
+  }
+  
+  isDonor(): boolean {
+    return this.hasRole('Donor');
+  }
+
   private isValidToken(token: string | null): boolean {
     if (!token) {
       return false;
@@ -79,8 +91,8 @@ export class AuthService {
     }
   }
 
-  private readToken(): string | null {
-    return this.isBrowser() ? localStorage.getItem(this.tokenKey) : null;
+  private readToken(): string {
+    return this.isBrowser() ? localStorage.getItem(this.tokenKey) || '' : '';
   }
 
   private writeToken(token: string): void {
@@ -96,6 +108,8 @@ export class AuthService {
   private decodeBase64Url(value: string): string {
     const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
     const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
-    return atob(padded);
+    const binary = atob(padded);
+    const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+    return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
   }
 }

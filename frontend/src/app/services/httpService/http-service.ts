@@ -7,13 +7,20 @@ import { Router } from '@angular/router';
 })
 export class HttpService {
   httpClient: HttpClient = inject(HttpClient);
-  url: string = "https://localhost:7142/api/";
+  port: number = 7142;
+  // port: number = 5023;
+  environment: string = 'development';
+  a: string = 'http';
+  url: string = `${this.a}://localhost:${this.port}/api/`;
   router = inject(Router);
 
-  constructor() {
-    const configuredUrl = localStorage.getItem('apiBaseUrl');
-    if (configuredUrl) {
-      this.url = configuredUrl.endsWith('/') ? configuredUrl : `${configuredUrl}/`;
-    }
-  }
+  // constructor() {
+  //   const configuredUrl = localStorage.getItem('apiBaseUrl');
+  //   // if (!configuredUrl) {
+  //   //   localStorage.setItem('apiBaseUrl', this.url);
+  //   // }
+  //   if (configuredUrl) {
+  //     this.url = configuredUrl.endsWith('/') ? configuredUrl : `${configuredUrl}/`;
+  //   }
+  // }
 }

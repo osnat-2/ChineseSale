@@ -12,5 +12,9 @@ namespace Project.Bll.Interfaces
         Task<Result<User>> GetDonorsAsync();
         Task<Result<User>> UpdateDonorAsync(int id, DonorUpdateDto donorDto);
         Task<Result<User>> DeleteDonorAsync(int id);
+        Task<Result<User>> GetAllManagedUsersAsync();
+        Task<Result<User>> CreateManagedUserAsync(ManagedUserCreateDto userDto, int createdBy);
+        Task<Result<User>> UpdateManagedUserAsync(int id, ManagedUserUpdateDto userDto);
+        Task<Result<User>> DeleteManagedUserAsync(int id);
     }
 }

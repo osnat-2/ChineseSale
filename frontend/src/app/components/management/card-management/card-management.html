@@ -1,7 +1,13 @@
 <section class="management-page">
   <header>
-    <p class="eyebrow">{{ 'management.cardEyebrow' | translate }}</p>
-    <h1>{{ 'management.cardTitle' | translate }}</h1>
+    <div>
+      <a routerLink="/admin" class="management-back-link">
+        <span class="management-back-arrow" aria-hidden="true">←</span>
+        {{ 'management.backToMenu' | translate }}
+      </a>
+      <p class="eyebrow">{{ 'management.cardEyebrow' | translate }}</p>
+      <h1>{{ 'management.cardTitle' | translate }}</h1>
+    </div>
   </header>
 
   <div *ngIf="cards.length === 0" class="empty-state">

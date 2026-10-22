@@ -3,13 +3,13 @@
     <h1 class="auth-title">{{ 'auth.loginTitle' | translate }}</h1>
 
     <!-- Error Message -->
-    <div *ngIf="errorMessage" class="alert alert-error">
+    <div *ngIf="errorMessage" class="alert alert-error" role="alert">
       <span class="alert-icon">⚠</span>
       <p class="alert-text">{{ errorMessage | translate }}</p>
     </div>
 
     <!-- Login Form -->
-    <form [formGroup]="loginForm" (ngSubmit)="login()" class="auth-form">
+    <form [formGroup]="loginForm" (ngSubmit)="login()" class="auth-form" [attr.aria-busy]="isLoading">
       <!-- Email Field -->
       <div class="form-group">
         <label for="email" class="form-label">{{ 'auth.email' | translate }}</label>
@@ -20,8 +20,10 @@
           class="form-input"
           [placeholder]="'auth.emailPlaceholder' | translate"
           [disabled]="isLoading"
+          [attr.aria-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched ? 'true' : null"
+          [attr.aria-describedby]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched ? 'login-email-error' : null"
         />
-        <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-message">
+        <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" id="login-email-error" class="error-message">
           <span *ngIf="loginForm.get('email')?.hasError('required')">{{ 'auth.emailRequired' | translate }}</span>
           <span *ngIf="loginForm.get('email')?.hasError('email')">{{ 'auth.emailInvalid' | translate }}</span>
         </div>
@@ -37,8 +39,10 @@
           class="form-input"
           [placeholder]="'auth.passwordPlaceholder' | translate"
           [disabled]="isLoading"
+          [attr.aria-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched ? 'true' : null"
+          [attr.aria-describedby]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched ? 'login-password-error' : null"
         />
-        <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-message">
+        <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" id="login-password-error" class="error-message">
           <span *ngIf="loginForm.get('password')?.hasError('required')">{{ 'auth.passwordRequired' | translate }}</span>
           <span *ngIf="loginForm.get('password')?.hasError('minlength')">{{ 'auth.passwordMin' | translate }}</span>
         </div>
@@ -58,7 +62,7 @@
     <div class="auth-footer">
       <p class="footer-text">
         {{ 'auth.noAccount' | translate }}
-        <a routerLink="/register" class="auth-link">{{ 'auth.registerLink' | translate }}</a>
+        <a routerLink="/register" [queryParams]="returnUrl ? { returnUrl: returnUrl } : null" class="auth-link">{{ 'auth.registerLink' | translate }}</a>
       </p>
     </div>
   </div>

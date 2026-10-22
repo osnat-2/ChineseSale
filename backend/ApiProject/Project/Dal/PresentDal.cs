@@ -114,6 +114,31 @@ namespace Project.Dal
             }
         }
 
+        public async Task<Result<Present>> GetPresentsByDonorIdAsync(int donorId)
+        {
+            try
+            {
+                var presents = await dbContext.Present
+                    .IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .Where(p => p.DonorId == donorId)
+                    .OrderBy(p => p.Name)
+                    .ToListAsync();
+
+                return new Result<Present>
+                {
+                    Success = true,
+                    Message = "Fetched donor presents successfully.",
+                    Data = presents
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error fetching presents for donor {DonorId}.", donorId);
+                throw;
+            }
+        }
+
         // Get present by ID
         public async Task<Result<Present>> GetPresentByIdAsync(int id)
         {

@@ -1,0 +1,103 @@
+<section class="management-page">
+  <header class="management-header">
+    <div>
+      <a routerLink="/admin" class="management-back-link">
+        <span class="management-back-arrow" aria-hidden="true">←</span>
+        {{ 'management.backToMenu' | translate }}
+      </a>
+      <p class="eyebrow">{{ 'management.categoryEyebrow' | translate }}</p>
+      <h1>{{ 'management.categoryTitle' | translate }}</h1>
+    </div>
+    <button type="button" class="primary-action" (click)="openAddForm()">
+      {{ 'management.addCategory' | translate }}
+    </button>
+  </header>
+
+  <p *ngIf="actionError && !formOpen && deleteConfirmationId === null" class="state-message error" role="alert">{{ actionError | translate }}</p>
+  <p *ngIf="actionSuccess" class="state-message success" role="status">{{ actionSuccess | translate }}</p>
+  <p *ngIf="loadError" class="state-message error" role="alert">{{ loadError | translate }}</p>
+
+  <div *ngIf="formOpen" class="management-modal-backdrop">
+    <section class="management-modal" role="dialog" aria-modal="true" aria-labelledby="category-form-title" tabindex="-1" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="closeForm()">
+      <div class="management-modal-header">
+        <h2 id="category-form-title">{{ (editingId === null ? 'forms.addCategory' : 'forms.editCategory') | translate }}</h2>
+        <button type="button" class="management-modal-close" [attr.aria-label]="'management.cancel' | translate" [disabled]="saving" (click)="closeForm()">×</button>
+      </div>
+      <form #categoryForm="ngForm" class="management-form" (ngSubmit)="saveCategory(categoryForm)">
+        <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
+        <label>
+          {{ 'management.name' | translate }}
+          <input name="name" [(ngModel)]="formValue.name" required minlength="1" maxlength="100" pattern=".*\S.*" cdkFocusInitial>
+        </label>
+        <label *ngIf="editingId !== null" class="checkbox-label">
+          <input name="isActive" type="checkbox" [(ngModel)]="formValue.isActive">
+          {{ 'management.active' | translate }}
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="primary-action" [disabled]="categoryForm.invalid || saving">
+            {{ (saving ? 'management.saving' : 'management.save') | translate }}
+          </button>
+          <button type="button" class="secondary-action" [disabled]="saving" (click)="closeForm()">
+            {{ 'management.cancel' | translate }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <p *ngIf="loading" class="state-message">{{ 'management.loading' | translate }}</p>
+  <p *ngIf="!loading && !loadError && categories.length === 0" class="empty-state">
+    {{ 'management.categoryEmpty' | translate }}
+  </p>
+
+  <div *ngIf="!loading && categories.length > 0" class="management-search">
+    <label for="category-search">{{ 'management.searchRecords' | translate }}</label>
+    <div class="management-search-controls">
+      <input id="category-search" type="search" [(ngModel)]="searchTerm" [placeholder]="'management.searchPlaceholder' | translate">
+      <button *ngIf="searchTerm" type="button" class="secondary-action" (click)="clearSearch()">
+        {{ 'management.clearSearch' | translate }}
+      </button>
+    </div>
+  </div>
+  <p *ngIf="!loading && !loadError && categories.length > 0 && !filteredCategories.length" class="empty-state">
+    {{ 'management.noSearchResults' | translate }}
+  </p>
+
+  <div *ngIf="!loading && filteredCategories.length > 0" class="management-cards">
+    <article *ngFor="let category of filteredCategories" class="management-card">
+      <div class="card-heading">
+        <h2>{{ category.name }}</h2>
+        <span class="status" [class.inactive]="!category.isActive">
+          {{ (category.isActive ? 'management.active' : 'management.inactive') | translate }}
+        </span>
+      </div>
+      <div class="card-actions">
+        <button type="button" class="secondary-action" (click)="openEditForm(category)">
+          {{ 'management.update' | translate }}
+        </button>
+        <button type="button" class="danger-action" (click)="requestDelete(category.id)">
+          {{ 'management.delete' | translate }}
+        </button>
+      </div>
+    </article>
+  </div>
+
+  <div *ngIf="deleteConfirmationId as categoryId" class="management-modal-backdrop">
+    <section class="management-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-category-title" tabindex="-1" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="cancelDelete()">
+      <div class="management-modal-header">
+        <h2 id="delete-category-title">{{ 'management.delete' | translate }} {{ 'management.category' | translate }}</h2>
+        <button type="button" class="management-modal-close" autofocus [attr.aria-label]="'management.cancel' | translate" [disabled]="saving" (click)="cancelDelete()">×</button>
+      </div>
+      <p>{{ 'management.confirmDeleteCategory' | translate }}</p>
+      <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
+      <div class="form-actions">
+        <button type="button" class="danger-action" [disabled]="saving" (click)="deleteCategory(categoryId)">
+          {{ (saving ? 'management.saving' : 'management.confirm') | translate }}
+        </button>
+        <button type="button" class="secondary-action" [disabled]="saving" (click)="cancelDelete()">
+          {{ 'management.cancel' | translate }}
+        </button>
+      </div>
+    </section>
+  </div>
+</section>

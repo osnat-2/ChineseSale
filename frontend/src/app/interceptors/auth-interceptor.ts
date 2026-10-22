@@ -4,19 +4,15 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/authService/auth-service';
 import { HttpService } from '../services/httpService/http-service';
+import { isConfiguredApiRequest } from './api-request';
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthService);
   const apiBaseUrl = inject(HttpService).url;
   const router = inject(Router);
   const token = authService.getToken();
-  const apiBase = new URL(apiBaseUrl);
-  const requestUrl = new URL(request.url, apiBase);
-  const apiPath = apiBase.pathname.endsWith('/') ? apiBase.pathname : `${apiBase.pathname}/`;
-  const requestPath = requestUrl.pathname;
-  const isApiRequest =
-    requestUrl.origin === apiBase.origin &&
-    (requestPath === apiBase.pathname || requestPath.startsWith(apiPath));
+  const isApiRequest = isConfiguredApiRequest(request.url, apiBaseUrl);
+  const requestPath = new URL(request.url, apiBaseUrl).pathname;
   const isAnonymousAuthRequest = /\/auth\/(?:login|register)\/?$/i.test(requestPath);
   const shouldAttachToken = Boolean(token && isApiRequest && !isAnonymousAuthRequest);
   const authorizedRequest = shouldAttachToken

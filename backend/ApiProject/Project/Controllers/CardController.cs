@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Project.Attributes;
+using Project.Bll;
 using Project.Bll.Interfaces;
 using Project.Dto;
 using Project.Models;
@@ -13,18 +14,26 @@ namespace Project.Controllers
     [Authorize]
     public class CardController : ControllerBase
     {
-        ICardService _cardService;
-        public CardController(ICardService cardService)
+        private readonly ICardService _cardService;
+        private readonly IWebHostEnvironment _environment;
+        private readonly PresentResponseMapper _responseMapper;
+
+        public CardController(
+            ICardService cardService,
+            IWebHostEnvironment environment,
+            PresentResponseMapper responseMapper)
         {
             _cardService = cardService;
+            _environment = environment;
+            _responseMapper = responseMapper;
         }
 
-        ////[Authorize(Roles = "Manager")]
-        //[HttpGet("/api/card/getCardsByPresent")]
-        //public async Task<Result<Card>> GetCardsWithPresentsAsync()
-        //{
-        //    return await _cardService.GetCardsWithPresentsAsync();
-        //}
+        //[Authorize(Roles = "Manager")]
+        [HttpGet("/api/card/getCardsByPresent")]
+        public async Task<IActionResult> GetCardsWithPresentsAsync()
+        {
+           return Ok(await _cardService.GetCardsWithPresentsAsync());
+        }
 
         //[RaffleBlock]
         [HttpPost]
@@ -46,7 +55,8 @@ namespace Project.Controllers
             {
                 return NotFound("No cards found for the user.");
             }
-            return Ok(cards);
+
+            return Ok(await _responseMapper.MapCardsAsync(cards));
         }
 
         [HttpDelete("{id:int}")]
@@ -60,15 +70,24 @@ namespace Project.Controllers
             return BadRequest(result.Message);
         }
 
-        [HttpPost("payment")]
-        public async Task<IActionResult> ProcessPayment()
+        [HttpPost("development-payment")]
+        public async Task<IActionResult> ProcessDevelopmentPayment(
+            [FromBody] DevelopmentPaymentRequestDto request)
         {
-            var result = await _cardService.ProcessPaymentAsync(GetUserId());
-            if (!result.Success)
+            if (!_environment.IsDevelopment())
             {
-                return BadRequest("Payment failed. There are still unpaid cards.");
+                return NotFound();
             }
-            return Ok("Payment processed successfully.");
+
+            var userId = GetUserId();
+            if (userId <= 0)
+            {
+                return Unauthorized();
+            }
+
+            var result = await _cardService.ProcessDevelopmentPaymentAsync(userId, request.Amount);
+            var response = await _responseMapper.MapCardsAsync(result);
+            return response.Success ? Ok(response) : BadRequest(response);
         }
 
         private int GetUserId()
@@ -102,13 +121,6 @@ namespace Project.Controllers
         //public async Task<Result<Card>> DeleteCardAsync([FromBody] int cardId)
         //{
         //    return await _cardService.DeleteCardAsync(cardId);
-        //}
-
-        //[RaffleBlock]
-        //[HttpPut("/api/card/payment")]
-        //public async Task<Result<Card>> ProcessPaymentForUserAsync(int userId)
-        //{
-        //    return await _cardService.ProcessPaymentForUserAsync(userId);
         //}
 
         //[HttpGet("/api/card/getCardsByUser/{userId}")]

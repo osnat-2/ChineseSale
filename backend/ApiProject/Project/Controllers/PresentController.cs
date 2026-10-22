@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Project.Bll;
 using Project.Bll.Interfaces;
 using Project.Dto;
 using Project.Models;
+using System.Security.Claims;
 
 namespace Project.Controllers
 {
@@ -11,10 +13,53 @@ namespace Project.Controllers
     public class PresentController : ControllerBase
     {
         private readonly IPresentService _presentService;
+        private readonly PresentResponseMapper _responseMapper;
+        private readonly PresentImageStorage _imageStorage;
 
-        public PresentController(IPresentService presentService)
+        public PresentController(
+            IPresentService presentService,
+            PresentResponseMapper responseMapper,
+            PresentImageStorage imageStorage)
         {
             _presentService = presentService;
+            _responseMapper = responseMapper;
+            _imageStorage = imageStorage;
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("uploadImage")]
+        [RequestSizeLimit(PresentImageStorage.MaximumFileSizeBytes + 64 * 1024)]
+        public async Task<ActionResult<Result<PresentImageUploadDto>>> UploadImageAsync(
+            IFormFile? image,
+            CancellationToken cancellationToken)
+        {
+            if (image is null)
+            {
+                return BadRequest(new Result<PresentImageUploadDto>
+                {
+                    Success = false,
+                    Message = "An image file is required."
+                });
+            }
+
+            var result = await _imageStorage.SaveAsync(image, cancellationToken);
+            if (!result.Success)
+            {
+                var response = new Result<PresentImageUploadDto>
+                {
+                    Success = false,
+                    Message = result.ErrorMessage
+                };
+                return result.IsTooLarge
+                    ? StatusCode(StatusCodes.Status413PayloadTooLarge, response)
+                    : BadRequest(response);
+            }
+
+            return Ok(new Result<PresentImageUploadDto>
+            {
+                Success = true,
+                Data = [new PresentImageUploadDto { ImageUrl = result.ImageUrl! }]
+            });
         }
 
         [Authorize(Roles = "Admin")]
@@ -25,21 +70,36 @@ namespace Project.Controllers
         }
 
         [HttpGet("getAllPresents")]
-        public async Task<Result<Present>> GetAllPresentsAsync(
+        public async Task<Result<PresentResponseDto>> GetAllPresentsAsync(
             [FromQuery] bool onlyActive = true,
             [FromQuery] string? search = null,
             [FromQuery] int? categoryId = null,
             [FromQuery] string? sortBy = null,
             [FromQuery] string? sortDirection = null)
         {
-            return await _presentService.GetAllPresentsAsync(onlyActive, search, categoryId, sortBy, sortDirection);
+            var result = await _presentService.GetAllPresentsAsync(onlyActive, search, categoryId, sortBy, sortDirection);
+            return await _responseMapper.MapPresentsAsync(result);
+        }
+
+        [Authorize(Roles = "Donor")]
+        [HttpGet("myPresents")]
+        public async Task<IActionResult> GetMyPresentsAsync()
+        {
+            if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var donorId) || donorId <= 0)
+            {
+                return Unauthorized();
+            }
+
+            var result = await _presentService.GetPresentsByDonorIdAsync(donorId);
+            return Ok(await _responseMapper.MapPresentsAsync(result));
         }
 
 
         [HttpGet("{id}")]
-        public async Task<Result<Present>> GetPresentByIdAsync(int id)
+        public async Task<Result<PresentResponseDto>> GetPresentByIdAsync(int id)
         {
-            return await _presentService.GetPresentByIdAsync(id);
+            var result = await _presentService.GetPresentByIdAsync(id);
+            return await _responseMapper.MapPresentsAsync(result);
         }
 
         [Authorize(Roles = "Admin")]
