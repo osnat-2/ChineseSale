@@ -1,3 +1,3 @@
 export class lotteryDtoModel {
-    year!: Date;
+    time!: string;
 }

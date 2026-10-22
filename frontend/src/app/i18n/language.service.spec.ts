@@ -56,11 +56,11 @@ describe('LanguageService', () => {
     expect(currency.transform(Number.NaN)).toBe('');
   });
 
-  it('translates interpolation parameters without losing mixed-script identifiers', () => {
+  it('translates interpolation parameters in user-facing card summaries', () => {
     const pipe = TestBed.runInInjectionContext(() => new TranslatePipe());
     language.setLanguage('he');
 
-    expect(pipe.transform('card.reference', { cardId: 12, presentId: 4 }))
-      .toBe('כרטיס מס׳ 12 עבור מתנה מס׳ 4');
+    expect(pipe.transform('personal.cardCount', { count: 2 }))
+      .toBe('מספר הכרטיסים: 2');
   });
 });

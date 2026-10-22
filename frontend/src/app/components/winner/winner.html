@@ -16,6 +16,10 @@
 			<article *ngFor="let present of presents" class="present-row" [class.drawn]="isDrawn(present.id)">
 				<div>
 					<h2>{{ present.name }}</h2>
+          <p class="present-category">
+            <span>{{ 'catalog.category' | translate }}:</span>
+            <bdi>{{ present.categoryName || ('catalog.categoryUnavailable' | translate) }}</bdi>
+          </p>
 					<p>{{ present.description || ('winner.noDescription' | translate) }}</p>
 				</div>
 				<button type="button" (click)="selectedPresentId = present.id; drawSelected()"

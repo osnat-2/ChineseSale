@@ -1,26 +1,41 @@
 <header class="site-header">
   <nav class="site-nav" [attr.aria-label]="'nav.main' | translate">
-    <a class="brand" routerLink="/home" [attr.aria-label]="'nav.brandHome' | translate">
+    <a class="brand" routerLink="/about" [attr.aria-label]="'nav.brandHome' | translate">
       <span class="brand-mark" aria-hidden="true">C</span>
       <span>Chinese <strong>Sale</strong></span>
     </a>
 
-    <div class="nav-links">
-      <a routerLink="/home" routerLinkActive="is-active">{{ 'nav.home' | translate }}</a>
-      <a routerLink="/catalog" routerLinkActive="is-active">{{ 'nav.catalog' | translate }}</a>
-      <a *ngIf="isAuthenticated()" routerLink="/card" routerLinkActive="is-active">{{ 'nav.myCards' | translate }}</a>
-      <a *ngIf="isAuthenticated()" routerLink="/personal-area" routerLinkActive="is-active">{{ 'nav.purchases' | translate }}</a>
-      <a *ngIf="isAdmin()" routerLink="/admin" routerLinkActive="is-active">{{ 'nav.admin' | translate }}</a>
-    </div>
+    <button
+      #menuToggle
+      class="nav-menu-toggle"
+      type="button"
+      [attr.aria-expanded]="menuOpen"
+      aria-controls="site-navigation-content"
+      [attr.aria-label]="(menuOpen ? 'nav.closeMenu' : 'nav.openMenu') | translate"
+      (click)="toggleMenu()">
+      <span aria-hidden="true">{{ menuOpen ? '×' : '☰' }}</span>
+    </button>
 
-    <div class="nav-actions">
-      <div class="language-switch" role="group" [attr.aria-label]="'nav.language' | translate">
-        <button type="button" lang="en" [attr.aria-label]="'nav.english' | translate" [attr.aria-pressed]="language.currentLanguage() === 'en'" (click)="setLanguage('en')">EN</button>
-        <button type="button" lang="he" [attr.aria-label]="'nav.hebrew' | translate" [attr.aria-pressed]="language.currentLanguage() === 'he'" (click)="setLanguage('he')">עברית</button>
+    <div id="site-navigation-content" class="nav-content" [class.is-open]="menuOpen">
+      <div class="nav-links">
+        <a *ngIf="!isAdmin()" routerLink="/home" routerLinkActive="is-active" (click)="closeMenu()">{{ 'nav.home' | translate }}</a>
+        <a *ngIf="isUser()" routerLink="/catalog" routerLinkActive="is-active" (click)="closeMenu()">{{ 'nav.catalog' | translate }}</a>
+        <ng-container *ngIf="isAuthenticated() && !isAdmin()">
+          <a routerLink="/personal-area" routerLinkActive="is-active" [attr.title]="'nav.personalAreaHint' | translate" aria-describedby="personal-area-tooltip" (click)="closeMenu()">{{ 'nav.personalArea' | translate }}</a>
+          <span id="personal-area-tooltip" class="nav-link-description">{{ 'nav.personalAreaHint' | translate }}</span>
+        </ng-container>
+        <a *ngIf="isAdmin()" routerLink="/admin" routerLinkActive="is-active" (click)="closeMenu()">{{ 'nav.admin' | translate }}</a>
       </div>
-      <a *ngIf="!isAuthenticated()" class="nav-login" routerLink="/login">{{ 'nav.login' | translate }}</a>
-      <a *ngIf="!isAuthenticated()" class="nav-register" routerLink="/register">{{ 'nav.register' | translate }}</a>
-      <button *ngIf="isAuthenticated()" class="nav-logout" type="button" (click)="logout()">{{ 'nav.logout' | translate }}</button>
+
+      <div class="nav-actions">
+        <div class="language-switch" role="group" [attr.aria-label]="'nav.language' | translate">
+          <button type="button" lang="en" [attr.aria-label]="'nav.english' | translate" [attr.aria-pressed]="language.currentLanguage() === 'en'" (click)="setLanguage('en')">EN</button>
+          <button type="button" lang="he" [attr.aria-label]="'nav.hebrew' | translate" [attr.aria-pressed]="language.currentLanguage() === 'he'" (click)="setLanguage('he')">עברית</button>
+        </div>
+        <a *ngIf="!isAuthenticated()" class="nav-login" routerLink="/login" (click)="closeMenu()">{{ 'nav.login' | translate }}</a>
+        <a *ngIf="!isAuthenticated()" class="nav-register" routerLink="/register" (click)="closeMenu()">{{ 'nav.register' | translate }}</a>
+        <button *ngIf="isAuthenticated()" class="nav-logout" type="button" (click)="logout()">{{ 'nav.logout' | translate }}</button>
+      </div>
     </div>
   </nav>
 </header>

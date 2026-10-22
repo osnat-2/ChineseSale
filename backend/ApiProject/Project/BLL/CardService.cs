@@ -19,17 +19,25 @@ namespace Project.Bll
 
         public async Task<Result<Card>> AddCard(CardDto cardDto, int userId)
         {
-            if (userId <= 0 || cardDto == null || cardDto.PresentId <= 0)
+            if (userId <= 0 || cardDto == null || cardDto.PresentId <= 0 ||
+                cardDto.Quantity < 1 || cardDto.Quantity > CardDto.MaximumQuantity)
             {
-                return new Result<Card> { Success = false, Message = "A valid present is required.", Data = null };
+                return new Result<Card> { Success = false, Message = "A valid present and quantity are required.", Data = null };
             }
 
-            var card = _mapper.Map<Card>(cardDto);
-            card.CreatedBy = userId;
-            card.IsActive = true;
-            card.IsDeleted = false;
-            card.IsPaid = false;
-            return await _cardDal.AddCard(card);
+            var cards = Enumerable.Range(0, cardDto.Quantity)
+                .Select(_ =>
+                {
+                    var card = _mapper.Map<Card>(cardDto);
+                    card.CreatedBy = userId;
+                    card.IsActive = true;
+                    card.IsDeleted = false;
+                    card.IsPaid = false;
+                    return card;
+                })
+                .ToArray();
+
+            return await _cardDal.AddCards(cards);
         }
         public Task<Result<Card>> GetCardsByUserAsync(int userId, bool? isPaid = null) =>
             userId > 0
@@ -41,9 +49,14 @@ namespace Project.Bll
                 ? _cardDal.DeleteCardAsync(cardId, userId)
                 : Task.FromResult(new Result<Card> { Success = false, Message = "Invalid card or user id.", Data = null });
 
-        public Task<Result<Card>> ProcessPaymentAsync(int userId) =>
-            userId > 0
-                ? _cardDal.ProcessPaymentAsync(userId)
-                : Task.FromResult(new Result<Card> { Success = false, Message = "Invalid user id.", Data = null });
+        public Task<Result<Card>> ProcessDevelopmentPaymentAsync(int userId, decimal amount) =>
+            userId > 0 && amount >= 0
+                ? _cardDal.ProcessDevelopmentPaymentAsync(userId, amount)
+                : Task.FromResult(new Result<Card> { Success = false, Message = "Invalid user id or amount.", Data = null });
+
+        public Task<object?> GetCardsWithPresentsAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

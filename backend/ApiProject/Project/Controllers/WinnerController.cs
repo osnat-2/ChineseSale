@@ -18,9 +18,12 @@ namespace Project.Controllers
         }
 
         [HttpPost("draw/{presentId:int}")]
-        public async Task<Result<Winner>> DrawWinner(int presentId, [FromQuery] int? lotteryId = null)
+        public async Task<ActionResult<Result<Winner>>> DrawWinner(
+            int presentId,
+            [FromQuery] int? lotteryId = null)
         {
-            return await _winnerService.DrawWinnerForPresentAsync(presentId, lotteryId);
+            var result = await _winnerService.DrawWinnerForPresentAsync(presentId, lotteryId);
+            return result.Success ? Ok(result) : BadRequest(result);
         }
     }
 }

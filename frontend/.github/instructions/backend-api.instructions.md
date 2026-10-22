@@ -876,12 +876,15 @@ interface presentModel {
   id?: number;
   name: string;
   donorId: number;
-  category: string;
+  categoryId: number;
+  categoryName: string | null;
   quantity: number;
   price: number;
   createdAt?: Date;
 }
 ```
+
+App-facing present reads return `categoryName` alongside `categoryId`. Card responses include the same present fields in their nested `present` object; `categoryName` is `null` only when no matching category exists.
 
 ### Card Model (Shopping Cart)
 ```typescript
@@ -987,4 +990,3 @@ if (!token) {
 
 ### Issue: SSL Certificate Warning
 **Development only**: Click "Proceed anyway" or trust self-signed cert
-

@@ -1,0 +1,146 @@
+.personal-section {
+  margin-block-start: 1.5rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-float);
+}
+
+.personal-section h2 {
+  margin-block: 0 1rem;
+  font-size: 1.2rem;
+  letter-spacing: -0.025em;
+}
+
+.profile-overview {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profile-avatar {
+  display: grid;
+  flex: 0 0 4rem;
+  aspect-ratio: 1;
+  place-items: center;
+  border: 1px solid var(--color-accent);
+  border-radius: 50%;
+  background: var(--color-canvas);
+  color: var(--color-accent-strong);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.profile-identity {
+  min-width: 0;
+}
+
+.profile-identity h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 1.2rem;
+}
+
+.personal-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0;
+  padding-block-start: 1rem;
+  border-block-start: 1px solid var(--color-border);
+}
+
+.personal-details > div {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.personal-details dt {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.personal-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-readonly-note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.personal-section-heading,
+.personal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.personal-actions {
+  flex-wrap: wrap;
+}
+
+.personal-actions a {
+  font-weight: 600;
+}
+
+.personal-card-list {
+  margin: 1rem 0 0;
+}
+
+.personal-card-list h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.personal-card-list .present-category {
+  display: flex;
+  gap: 0.35rem;
+  margin-block: 0.2rem 0;
+  color: var(--color-text-muted);
+}
+
+.present-category span {
+  font-weight: 650;
+}
+
+.personal-card-list li > div > span {
+  display: inline-block;
+  margin-block-start: 0.2rem;
+  color: var(--color-text-muted);
+}
+
+.personal-card-status {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--color-warning);
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.personal-card-status.is-paid {
+  color: var(--color-success);
+}
+
+@media (max-width: 560px) {
+  .personal-details {
+    grid-template-columns: 1fr;
+  }
+
+  .personal-section-heading,
+  .personal-card-list li {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

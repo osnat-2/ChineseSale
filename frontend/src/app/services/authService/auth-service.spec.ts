@@ -2,7 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { AuthService } from './auth-service';
 
 function createToken(claims: Record<string, unknown>): string {
-  const encode = (value: string) => btoa(value).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const encode = (value: string) => btoa(String.fromCharCode(...new TextEncoder().encode(value)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
   return `${encode('{"alg":"none"}')}.${encode(JSON.stringify(claims))}.signature`;
 }
 
@@ -23,6 +24,15 @@ describe('AuthService', () => {
     expect(service.getToken()).toBe(token);
     expect(service.isAuthenticated()).toBeTrue();
     expect(service.isAdmin()).toBeTrue();
+  });
+
+  it('decodes UTF-8 claim values', () => {
+    service.setToken(createToken({
+      unique_name: 'נועה',
+      exp: Math.floor(Date.now() / 1000) + 300
+    }));
+
+    expect(service.getClaims()?.unique_name).toBe('נועה');
   });
 
   it('rejects expired tokens and clears them on logout', () => {

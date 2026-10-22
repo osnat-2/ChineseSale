@@ -10,6 +10,8 @@ namespace Project.Profiles
         {
             CreateMap<LotteryDto, Lottery>()
                 .ForMember(destination => destination.Id, options => options.Ignore())
+                .ForMember(destination => destination.IsMadeOut, options => options.MapFrom(_ => false))
+                .ForMember(destination => destination.IsActive, options => options.MapFrom(_ => true))
                 .ForMember(destination => destination.IsDeleted, options => options.Ignore())
                 .ForMember(destination => destination.DeletedAt, options => options.Ignore())
                 .ForMember(destination => destination.CreatedAt, options => options.Ignore())

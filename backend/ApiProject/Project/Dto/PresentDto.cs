@@ -19,8 +19,9 @@ namespace Project.Dto
         public int CategoryId { get; set; }
 
         [Required]
-        [Url]
-        [RegularExpression(@"^https?://", ErrorMessage = "Image URL must use HTTP or HTTPS.")]
+        [RegularExpression(
+            @"^/uploads/presents/[0-9a-f]{32}\.(jpg|png|webp)$",
+            ErrorMessage = "Image URL must refer to an uploaded local present image.")]
         [StringLength(2048)]
         public string ImageUrl { get; set; } = string.Empty;
 

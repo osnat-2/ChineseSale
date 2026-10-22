@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { donorModel } from '../../../models/donor';
 import { DonorService } from '../../../services/donorService/donor-service';
@@ -10,6 +11,7 @@ describe('DonorManagement', () => {
   let donorService: jasmine.SpyObj<DonorService>;
 
   beforeEach(async () => {
+    window.localStorage.setItem('chinese-sale-language', 'en');
     donorService = jasmine.createSpyObj<DonorService>(
       'DonorService',
       ['getAllDonors', 'addDonor', 'updateDonor', 'deleteDonor']
@@ -18,12 +20,21 @@ describe('DonorManagement', () => {
 
     await TestBed.configureTestingModule({
       imports: [DonorManagement],
-      providers: [{ provide: DonorService, useValue: donorService }],
+      providers: [provideRouter([]), { provide: DonorService, useValue: donorService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DonorManagement);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => window.localStorage.removeItem('chinese-sale-language'));
+
+  it('links back to the management menu', () => {
+    const link = fixture.nativeElement.querySelector('.management-back-link') as HTMLAnchorElement;
+
+    expect(link.getAttribute('href')).toBe('/admin');
+    expect(link.textContent).toContain('Back to management menu');
   });
 
   it('shows the add action when the donor list is empty', () => {
@@ -40,6 +51,36 @@ describe('DonorManagement', () => {
 
     const card = fixture.nativeElement.querySelector('.management-card') as HTMLElement;
     expect(card.querySelectorAll('.card-actions button').length).toBe(2);
+  });
+
+  it('filters donor cards by name, email, and phone and clears the search', () => {
+    component.donors = [makeDonor(), {
+      ...makeDonor(),
+      id: 8,
+      name: 'Second Donor',
+      phone: '987654321',
+      email: 'second@example.com',
+    }];
+    component.searchTerm = 'second@example.com';
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.management-card').length).toBe(1);
+    expect(fixture.nativeElement.textContent).toContain('Second Donor');
+
+    component.clearSearch();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.management-card').length).toBe(2);
+  });
+
+  it('opens add and update forms in a modal', () => {
+    component.openAddForm();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="dialog"][aria-modal="true"]')).toBeTruthy();
+
+    component.openEditForm(makeDonor());
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="dialog"][aria-modal="true"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('#donor-form-title')?.textContent).toContain('Edit donor');
   });
 
   it('creates a donor through the existing add endpoint and refreshes the list', () => {
@@ -65,6 +106,8 @@ describe('DonorManagement', () => {
     expect(donorService.deleteDonor).not.toHaveBeenCalled();
 
     component.requestDelete(7);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alertdialog"][aria-modal="true"]')).toBeTruthy();
     component.deleteDonor(7);
     expect(donorService.deleteDonor).toHaveBeenCalledWith(7);
   });

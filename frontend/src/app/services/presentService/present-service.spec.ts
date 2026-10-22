@@ -40,9 +40,17 @@ describe('PresentService', () => {
     request.flush({ success: true, data: [] });
   });
 
+  it('requests the authenticated donor presents endpoint', () => {
+    service.getMyDonatedPresents().subscribe();
+    const request = http.expectOne('http://localhost:7142/api/present/myPresents');
+
+    expect(request.request.method).toBe('GET');
+    request.flush({ success: true, data: [] });
+  });
+
   it('requests a present by id', () => {
     service.getPresentById(9).subscribe();
-    const request = http.expectOne('https://localhost:7142/api/present/9');
+    const request = http.expectOne('http://localhost:7142/api/present/9');
     expect(request.request.method).toBe('GET');
     request.flush({ success: true, data: [] });
   });
@@ -53,25 +61,37 @@ describe('PresentService', () => {
       description: 'A basket',
       donorId: 3,
       categoryId: 2,
-      imageUrl: 'https://example.com/gift.jpg',
+      imageUrl: '/uploads/presents/0123456789abcdef0123456789abcdef.png',
       quantity: 1,
       price: 10
     };
 
     service.addPresent(input).subscribe();
-    const add = http.expectOne('https://localhost:7142/api/present/addPresent');
+    const add = http.expectOne('http://localhost:7142/api/present/addPresent');
     expect(add.request.method).toBe('POST');
     expect(add.request.body).toEqual(input);
     add.flush({ success: true, data: null });
 
     service.updatePresent(5, input).subscribe();
-    const update = http.expectOne('https://localhost:7142/api/present/updatePresent/5');
+    const update = http.expectOne('http://localhost:7142/api/present/updatePresent/5');
     expect(update.request.method).toBe('PUT');
     update.flush({ success: true, data: null });
 
     service.deletePresent(5).subscribe();
-    const remove = http.expectOne('https://localhost:7142/api/present/removePresent/5');
+    const remove = http.expectOne('http://localhost:7142/api/present/removePresent/5');
     expect(remove.request.method).toBe('DELETE');
     remove.flush({ success: true, data: null });
+  });
+
+  it('uploads a selected present image as multipart form data', () => {
+    const image = new File(['image bytes'], 'gift.png', { type: 'image/png' });
+
+    service.uploadPresentImage(image).subscribe();
+
+    const request = http.expectOne('http://localhost:7142/api/present/uploadImage');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body instanceof FormData).toBeTrue();
+    expect((request.request.body as FormData).get('image')).toBeTruthy();
+    request.flush({ success: true, data: [{ imageUrl: '/uploads/presents/0123456789abcdef0123456789abcdef.png' }] });
   });
 });

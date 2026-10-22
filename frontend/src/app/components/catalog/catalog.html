@@ -6,17 +6,27 @@
   </header>
 
   <form class="filters" (ngSubmit)="loadPresents()" [attr.aria-label]="'catalog.filters' | translate">
-    <label>
-      {{ 'catalog.search' | translate }}
-      <input type="search" name="search" [(ngModel)]="search" [placeholder]="'catalog.searchPlaceholder' | translate" />
-    </label>
-    <label>
+    <div class="catalog-search-field" [attr.aria-busy]="loading">
+      <label for="catalog-search">{{ 'catalog.search' | translate }}</label>
+      <div class="catalog-search-control">
+        <input id="catalog-search" type="search" name="search" [(ngModel)]="search" [placeholder]="'catalog.searchPlaceholder' | translate" />
+        <button
+          *ngIf="search"
+          type="button"
+          class="secondary-action"
+          [disabled]="loading"
+          (click)="clearSearch()">
+          {{ 'catalog.clearSearch' | translate }}
+        </button>
+      </div>
+    </div>
+    <!-- <label>
       {{ 'catalog.category' | translate }}
       <select name="category" [(ngModel)]="categoryId">
         <option value="">{{ 'catalog.allCategories' | translate }}</option>
         <option *ngFor="let category of categories" [value]="category.id">{{ category.name }}</option>
       </select>
-    </label>
+    </label> -->
     <label>
       {{ 'catalog.sortBy' | translate }}
       <select name="sortBy" [(ngModel)]="sortBy">
@@ -31,25 +41,138 @@
         <option value="desc">{{ 'catalog.descending' | translate }}</option>
       </select>
     </label>
-    <button type="submit">{{ 'catalog.apply' | translate }}</button>
+    <div class="filter-actions">
+      <button type="submit" [disabled]="loading">{{ 'catalog.apply' | translate }}</button>
+      <button type="button" class="secondary-action" [disabled]="loading" (click)="clearFilters()">
+        {{ 'catalog.clearFilters' | translate }}
+      </button>
+    </div>
   </form>
 
-  <p *ngIf="loading" class="state" role="status">{{ 'catalog.loading' | translate }}</p>
-  <p *ngIf="!loading && errorMessage" class="state state-error" role="alert">{{ errorMessage | translate }}</p>
-  <p *ngIf="!loading && !errorMessage && presents.length === 0" class="state">{{ 'catalog.empty' | translate }}</p>
+  <div *ngIf="categoryErrorMessage" class="state-message state-warning" role="status">
+    <span>{{ categoryErrorMessage | translate }}</span>
+    <button type="button" class="secondary-action" (click)="retryCategories()">
+      {{ 'catalog.retry' | translate }}
+    </button>
+  </div>
+  <p *ngIf="loading && !presents.length" class="state" role="status">{{ 'catalog.loading' | translate }}</p>
+  <p *ngIf="loading && presents.length" class="state state-refresh" role="status" aria-live="polite">
+    {{ 'catalog.refreshing' | translate }}
+  </p>
+  <div *ngIf="!loading && errorMessage" class="state-message state-error" role="alert">
+    <span>{{ errorMessage | translate }}</span>
+    <button type="button" class="secondary-action" (click)="loadPresents()">
+      {{ 'catalog.retry' | translate }}
+    </button>
+  </div>
+  <p *ngIf="!loading && !errorMessage && filteredPresents.length === 0" class="state">
+    {{ (hasContentFilters ? 'catalog.noMatches' : 'catalog.noPresents') | translate }}
+  </p>
+  <p *ngIf="addCardSuccessMessage" class="state state-success" role="status">{{ addCardSuccessMessage | translate }}</p>
 
-  <section *ngIf="!loading && !errorMessage && presents.length" class="present-grid" [attr.aria-label]="'catalog.availablePresents' | translate">
-    <article *ngFor="let present of presents" class="present-card">
-      <img [src]="present.imageUrl || 'assets/images/present-placeholder.svg'" [alt]="present.name" (error)="imageFallback($event)" />
+  <section *ngIf="filteredPresents.length" class="present-grid" [attr.aria-label]="'catalog.availablePresents' | translate" [attr.aria-busy]="loading">
+    <article *ngFor="let present of filteredPresents" class="present-card">
+      <div class="present-card-media">
+        <img [src]="(present.imageUrl || 'assets/present-placeholder.svg') | presentImageUrl" [alt]="present.name" (error)="imageFallback($event)" />
+      </div>
       <div class="present-card-body">
         <p class="card-label">{{ 'catalog.present' | translate }}</p>
-        <h2><bdi>{{ present.name }}</bdi></h2>
+        <div class="present-title-row">
+          <h2><bdi>{{ present.name }}</bdi></h2>
+          <button
+            *ngIf="isAuthenticated()"
+            #addTrigger
+            class="add-to-basket"
+            type="button"
+            [disabled]="addingPresentId !== null"
+            aria-haspopup="dialog"
+            [attr.aria-label]="'catalog.addToBasketFor' | translate:{name: present.name}"
+            (click)="openAddDialog(present, addTrigger)">
+            {{ 'catalog.addToBasket' | translate }}
+          </button>
+          <a
+            *ngIf="!isAuthenticated()"
+            class="add-to-basket sign-in-to-add"
+            routerLink="/login"
+            [queryParams]="signInQueryParams(present)">
+            {{ 'catalog.signInToAdd' | translate }}
+          </a>
+        </div>
         <p><bdi>{{ present.description }}</bdi></p>
+        <p class="present-category">
+          <span>{{ 'catalog.category' | translate }}:</span>
+          <bdi>{{ present.categoryName || ('catalog.categoryUnavailable' | translate) }}</bdi>
+        </p>
         <div class="card-footer">
           <strong>{{ present.price | localizedCurrency }}</strong>
-          <a [routerLink]="['/catalog', present.id]">{{ 'catalog.viewDetails' | translate }}</a>
+          <a [routerLink]="['/catalog', present.id]" [queryParams]="catalogQueryParams">{{ 'catalog.viewDetails' | translate }}</a>
         </div>
       </div>
     </article>
   </section>
+
+  <div
+    *ngIf="selectedPresent as present"
+    class="catalog-modal-backdrop"
+    (click)="closeAddDialog()">
+    <section
+      class="catalog-add-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-describedby="catalog-add-dialog-description"
+      [attr.aria-labelledby]="'catalog-add-dialog-title-' + present.id"
+      tabindex="-1"
+      (click)="$event.stopPropagation()"
+      (keydown)="handleAddDialogKeydown($event)">
+      <header class="catalog-add-dialog-header">
+        <h2 [id]="'catalog-add-dialog-title-' + present.id">
+          {{ 'catalog.addDialogTitle' | translate:{name: present.name} }}
+        </h2>
+        <button
+          type="button"
+          class="catalog-dialog-close"
+          [attr.aria-label]="'catalog.closeAddDialog' | translate"
+          [disabled]="addingPresentId !== null"
+          (click)="closeAddDialog()">×</button>
+      </header>
+      <p id="catalog-add-dialog-description">{{ 'catalog.addDialogPrompt' | translate }}</p>
+      <p *ngIf="addCardErrorMessage" class="state-error" role="alert">{{ addCardErrorMessage | translate }}</p>
+      <form class="catalog-add-form" (ngSubmit)="addPresentToBasket(present)">
+        <label class="quantity-control">
+          {{ 'catalog.quantityFor' | translate:{name: present.name} }}
+          <input
+            type="number"
+            [name]="'quantity-' + present.id"
+            min="1"
+            [max]="maximumQuantity"
+            step="1"
+            #quantityInput
+            [ngModel]="quantityFor(present.id)"
+            (ngModelChange)="quantities[present.id] = $event"
+            required
+            autofocus
+            [attr.aria-label]="'catalog.quantityFor' | translate:{name: present.name}" />
+        </label>
+        <p *ngIf="!isQuantityValid(present.id)" class="quantity-error">
+          {{ 'card.invalidQuantity' | translate }}
+        </p>
+        <div class="catalog-dialog-actions">
+          <button
+            class="catalog-dialog-add"
+            type="submit"
+            [disabled]="addingPresentId !== null || !isQuantityValid(present.id)"
+            [attr.aria-busy]="addingPresentId === present.id">
+            {{ addingPresentId === present.id ? ('catalog.addingToBasket' | translate) : ('catalog.addToBasket' | translate) }}
+          </button>
+          <button
+            class="catalog-dialog-cancel"
+            type="button"
+            [disabled]="addingPresentId !== null"
+            (click)="closeAddDialog()">
+            {{ 'catalog.cancelAdd' | translate }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
 </main>

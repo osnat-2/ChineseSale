@@ -7,5 +7,7 @@ namespace Project.Dto
         [Required]
         [StringLength(100, MinimumLength = 1)]
         public string Name { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
     }
 }

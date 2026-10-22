@@ -96,6 +96,20 @@ namespace Project.Dal
             }
         }
 
+        public async Task<IReadOnlyDictionary<int, string>> GetCategoryNamesByIdsAsync(IReadOnlyCollection<int> ids)
+        {
+            if (ids.Count == 0)
+            {
+                return new Dictionary<int, string>();
+            }
+
+            return await dbContext.Category
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .Where(category => ids.Contains(category.Id))
+                .ToDictionaryAsync(category => category.Id, category => category.Name);
+        }
+
         // Check if category name exists (for duplicate checking)
         public async Task<Result<bool>> CategoryNameExistsAsync(string name, int? excludeCategoryId = null)
         {

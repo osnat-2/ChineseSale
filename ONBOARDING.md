@@ -1,32 +1,32 @@
-# מדריך כניסה לעבודה על Chinese Sale
+# Chinese Sale Onboarding Guide
 
-ברוך/ה הבא/ה לפרויקט. המסמך הזה נועד לאפשר כניסה רגועה, מסודרת ועצמאית לעבודה על **Chinese Sale MVP**.
+Welcome to the project! This guide is designed to help you get started working on the **Chinese Sale MVP** in a calm, organized, and independent way.
 
-## 1. היכרות עם הפרויקט
+## 1. Project Overview
 
-Chinese Sale הוא אתר למכירת כרטיסים למכירה סינית: משתמשים יכולים להירשם ולהתחבר, לצפות במתנות ובקטגוריות, לרכוש כרטיסים, ובשלבים המתאימים להשתתף בהגרלה. במערכת קיימים גם תפקידי מנהל ותורם ותהליכי ניהול, תשלום פיתוח וזוכים.
+Chinese Sale is a website for selling tickets in a Chinese auction. Users can register and sign in, browse gifts and categories, purchase tickets, and participate in a drawing when the relevant features are available. The system also includes administrator and donor roles, management workflows, development-mode payment, and winner-related features.
 
-הארכיטקטורה מחולקת לשני חלקים:
+The architecture has two parts:
 
-- **Backend**: Web API של ASP.NET Core על .NET 8, עם Controllers, שכבות Bll ו-DAL, DTOs, AutoMapper, JWT ו-Entity Framework Core.
-- **Frontend**: אפליקציית Angular 20, עם routes, components, services, מודלים ו-UI המבוסס גם על Angular Material ו-Bootstrap.
-- **תקשורת**: ה-Frontend פונה ל-API באמצעות `HttpClient`. כתובת ה-API המוגדרת בשירות ה-HTTP היא `https://localhost:7142/api/`.
+- **Backend**: An ASP.NET Core Web API on .NET 8, with controllers, BLL and DAL layers, DTOs, AutoMapper, JWT, and Entity Framework Core.
+- **Frontend**: An Angular 20 application with routes, components, services, models, and a UI that also uses Angular Material and Bootstrap.
+- **Communication**: The frontend calls the API using `HttpClient`. The API URL configured in the HTTP service is `https://localhost:7142/api/`.
 
-## 2. הכנת סביבת העבודה
+## 2. Set Up Your Development Environment
 
-יש להתקין מראש:
+Install the following:
 
 - Git.
 - .NET 8 SDK.
-- Node.js בגרסה התואמת ל-Angular 20, כולל `npm`.
-- סביבת פיתוח כמו VS Code או Visual Studio.
-- SQL Server או סביבת מסד הנתונים שהוגדרה לצוות, אם נדרשת גישה לפעולות הנשענות על נתונים.
+- A version of Node.js compatible with Angular 20, including `npm`.
+- A development environment such as VS Code or Visual Studio.
+- SQL Server or the database environment configured for the team, if you need access to data-backed operations.
 
-לאחר השכפול, פותחים שני טרמינלים נפרדים: אחד ל-Backend ואחד ל-Frontend. כך אפשר להריץ את שני החלקים במקביל.
+After cloning the repository, open two separate terminals: one for the backend and one for the frontend. This lets you run both parts at the same time.
 
-## 3. Git: כניסה ראשונה ופתיחת ענף אישי
+## 3. Git: Getting Started and Creating a Personal Branch
 
-יש לעבוד בענף אישי ולא ישירות על `Dev`.
+Work on a personal branch, not directly on `Dev`.
 
 ```powershell
 git clone <REPOSITORY_URL>
@@ -35,7 +35,7 @@ git switch -c Gilli
 git push -u origin Gilli
 ```
 
-אם הענף `Gilli` כבר קיים בשרת:
+If the `Gilli` branch already exists on the remote:
 
 ```powershell
 git fetch origin
@@ -43,91 +43,91 @@ git switch Gilli
 git pull --ff-only origin Gilli
 ```
 
-לפני כל עבודה כדאי לוודא את המצב:
+Before starting work, check the repository status:
 
 ```powershell
 git status --short --branch
 git branch -vv
 ```
 
-### שגרת עבודה מומלצת
+### Recommended Workflow
 
-1. בתחילת כל יום מקבלים את העדכונים של `Dev` אל הענף האישי:
+1. At the start of each day, bring updates from `Dev` into your personal branch:
 
    ```powershell
    git fetch origin
    git pull --ff-only origin Dev
    ```
 
-   אם יש שינויים מקומיים לא שמורים או שהפקודה אינה יכולה לבצע Fast-forward, עוצרים ומתאמים לפני שממשיכים. אין לבצע `reset`, `clean`, `checkout` או מחיקה של עבודה קיימת בלי אישור מפורש.
+   If you have uncommitted local changes or the command cannot fast-forward, stop and coordinate before continuing. Do not run `reset`, `clean`, `checkout`, or delete existing work without explicit approval.
 
-2. עובדים, בודקים ומבצעים commits קטנים וברורים בענף האישי.
-3. לפני שיתוף העבודה מריצים את הבדיקות הרלוונטיות ובודקים את ה-diff.
-4. דוחפים את הענף:
+2. Work, test, and create small, descriptive commits on your personal branch.
+3. Before sharing your work, run the relevant tests and review the diff.
+4. Push your branch:
 
    ```powershell
    git push origin Gilli
    ```
 
-5. בסיום משימה פותחים Pull Request מ-`Gilli` אל `Dev`, עם תיאור קצר של השינוי, בדיקות שבוצעו ומגבלות ידועות.
+5. When a task is complete, open a pull request from `Gilli` to `Dev`. Include a brief description of the changes, tests performed, and known limitations.
 
-לפעולות Git משתמשים ב-agent בשם `git` וב-skill בשם `git-workflow`. הם מסייעים לבדוק ענפים, upstream, שינויים, commits ו-PRs תוך שמירה על עבודה קיימת. לא מבצעים commit, push או PR אוטומטית בלי לוודא שהיקף הפעולה ברור.
+For Git operations, use the `git` agent and the `git-workflow` skill. They help check branches, upstream settings, changes, commits, and pull requests while preserving existing work. Do not automatically commit, push, or open a pull request without first confirming the scope of the action.
 
-## 4. איך עובדים עם Agents ו-Skills
+## 4. Working with Agents and Skills
 
-התיקייה `.github` מכילה את הוראות העבודה של הפרויקט:
+The `.github` directory contains the project's working instructions:
 
-- `.github/agents/` מכילה agents ייעודיים: `contract-baseline`, `auth`, `catalog`, `purchase-payment`, `admin`, `lottery`, `chinese-sale-phase` ו-`git`.
-- `.github/skills/` מכילה את הידע וההליך הנדרש לכל תחום, כולל `contract-baseline`, `auth`, `catalog`, `purchase-payment`, `admin`, `lottery` ו-`git-workflow`.
-- `.github/instructions/` מכילה כללי בטיחות ועבודה משותפים לקבצי C#, Angular ותיעוד.
+- `.github/agents/` contains dedicated agents: `contract-baseline`, `auth`, `catalog`, `purchase-payment`, `admin`, `lottery`, `chinese-sale-phase`, and `git`.
+- `.github/skills/` contains the knowledge and procedures required for each area, including `contract-baseline`, `auth`, `catalog`, `purchase-payment`, `admin`, `lottery`, and `git-workflow`.
+- `.github/instructions/` contains shared safety and workflow rules for C#, Angular, and documentation files.
 
-Agent הוא מומחה לתחום עבודה; Skill הוא ההליך והכללים שה-agent צריך להפעיל. לפני שמתחילים משימה בוחרים את ה-agent וה-skill המתאימים, קוראים את `plan.md`, ומוודאים שהעבודה נמצאת בשלב הנכון.
+An agent specializes in a work area; a skill provides the procedure and rules the agent should follow. Before starting a task, choose the appropriate agent and skill, read `plan.md`, and confirm that the work is at the right stage.
 
-### Gated Sub-plan: שער האישור
+### Gated Sub-Plan: Approval Gate
 
-כל שלב משמעותי עובד בתהליך אישור מדורג:
+Each significant phase follows a staged approval process:
 
-1. קוראים את `plan.md`, את הוראות ה-agent וה-skill ואת הקוד שבאחריות המודול.
-2. מנתחים חוזים, תלויות, סיכונים, קבצים וסמלים שישתנו.
-3. מציגים **Gated Sub-plan** מפורט: גבולות השינוי, קבצים מדויקים, קריטריוני בדיקה ותלויות.
-4. עוצרים וממתינים לאישור מפורש.
-5. רק לאחר האישור עורכים קוד, מריצים בדיקות ומעדכנים את `plan.md` עם החלטות, תוצאות ו-handoffs.
+1. Read `plan.md`, the agent and skill instructions, and the code owned by the module.
+2. Analyze contracts, dependencies, risks, and the files and symbols that may change.
+3. Present a detailed **Gated Sub-Plan** with the change boundaries, exact files, validation criteria, and dependencies.
+4. Stop and wait for explicit approval.
+5. Only after approval, edit code, run tests, and update `plan.md` with decisions, results, and handoffs.
 
-במיוחד אין לשנות את `backend/ApiProject/Project/Models/` או את `Migrations/`, ואין להריץ פקודות migration או עדכון מסד נתונים, ללא אישור מפורש לשינוי המסוים. הרשאות Backend הן מקור האמת; Guards ב-Angular משפרים ניווט אך אינם אבטחה.
+In particular, do not modify `backend/ApiProject/Project/Models/` or `Migrations/`, or run migration or database-update commands, without explicit approval for that specific change. Backend authorization is the source of truth; Angular guards improve navigation but are not security controls.
 
-## 5. חלוקת אחריות לעבודה במקביל
+## 5. Dividing Work in Parallel
 
-כדי לצמצם Merge Conflicts, כל אחד עובד בעיקר בתוך גבול מודול ברור. לפני שינוי בקובץ משותף מתאמים עם השותף ומעדכנים את ה-Sub-plan.
+To reduce merge conflicts, each person should primarily work within a clearly defined module boundary. Coordinate with your teammate and update the sub-plan before changing a shared file.
 
-### חוזה ותשתית Backend
+### Backend Contracts and Infrastructure
 
-אחראי על בדיקת המודלים הקיימים, DTOs, Profiles, Controllers, Bll ו-DAL, ועל תיעוד חוזי ה-API. זהו שלב התשתית (`contract-baseline`) והוא צריך להסתיים לפני התאמות Angular. אין להוסיף ישויות או לשנות סכימה בלי אישור נפרד.
+Responsible for reviewing existing models, DTOs, profiles, controllers, BLL, and DAL, and documenting API contracts. This infrastructure phase (`contract-baseline`) must be completed before Angular adjustments. Do not add entities or change the schema without separate approval.
 
 ### Auth
 
-אחראי על `UserController`, `UserService`, JWT, claims, interceptor, logout, expiry, auth guard ו-admin guard. כולל הרשמה, התחברות והפרדה בין `User`, `Donor` ו-`Admin` לפי החוזה שאושר.
+Responsible for `UserController`, `UserService`, JWT, claims, the interceptor, logout, token expiration, the auth guard, and the admin guard. This includes registration, sign-in, and distinguishing `User`, `Donor`, and `Admin` according to the approved contract.
 
 ### Catalog
 
-אחראי על קטלוג ציבורי: מתנות, קטגוריות, חיפוש, סינון, רשימות ופרטי מתנה. בצד Angular: services, models, routes ו-components הקשורים ל-home, presents ו-categories, כולל מצבי loading, empty ו-error.
+Responsible for the public catalog: gifts, categories, search, filtering, lists, and gift details. On the Angular side, this includes services, models, routes, and components related to home, presents, and categories, including loading, empty, and error states.
 
-### Purchase ו-Payment
+### Purchase and Payment
 
-אחראי על כרטיסים, בעלות, זמינות, checkout, אזור אישי ותשלום פיתוח. הבעלות ומצב התשלום נקבעים בשרת; אין לסמוך על `userId`, `CreatedBy` או `IsPaid` שהלקוח שולח.
+Responsible for tickets, ownership, availability, checkout, the personal area, and development-mode payment. Ownership and payment status are determined by the server; do not trust `userId`, `CreatedBy`, or `IsPaid` values sent by the client.
 
-### Admin ו-Donor
+### Admin and Donor
 
-אחראי על מסכי ניהול למתנות, קטגוריות, תורמים, כרטיסים ורכישות, כולל הרשאות Admin, ולידציה, active/deleted וטיפול בשגיאות שרת. תורם מיוצג במערכת כ-`User` בעל role מתאים, ולא כישות חדשה ללא אישור.
+Responsible for management screens for gifts, categories, donors, tickets, and purchases, including Admin authorization, validation, active/deleted behavior, and server-error handling. A donor is represented in the system as a `User` with the appropriate role, not as a new entity without approval.
 
-### Lottery ו-Winner
+### Lottery and Winner
 
-אחראי על הגרלה, זכאות של כרטיסים ששולמו, שמירת זוכים, idempotency והרשאות. מסכי הזוכים והודעות נבנים רק לפי נתונים שמגיעים מה-API, לא לפי נתוני דמה ב-Frontend.
+Responsible for the drawing, eligibility of paid tickets, winner persistence, idempotency, and authorization. Winner screens and notifications must use data returned by the API, not mock data in the frontend.
 
-### קבצים משותפים
+### Shared Files
 
-`plan.md`, routes ראשיים, `app.config.ts`, שירות HTTP, מודלים משותפים וקבצי styles עלולים לגרום להתנגשויות. משנים אותם רק לאחר תיאום, ב-commit ממוקד, ומעדכנים את השותף מיד.
+`plan.md`, primary routes, `app.config.ts`, the HTTP service, shared models, and style files may cause conflicts. Change them only after coordinating, in a focused commit, and notify your teammate right away.
 
-## 6. צעדים ראשונים להרצה מקומית
+## 6. First Steps for Running the Project Locally
 
 ### Backend
 
@@ -138,17 +138,17 @@ dotnet build
 dotnet run --launch-profile http
 ```
 
-לאחר ההפעלה פותחים:
+After the backend starts, open:
 
 - Swagger: `http://localhost:5023/swagger`
-- API ב-HTTPS: `https://localhost:7142`
-- API ב-HTTP: `http://localhost:5023`
+- API over HTTPS: `https://localhost:7142`
+- API over HTTP: `http://localhost:5023`
 
-אפשר גם להריץ את הפרויקט מתוך Visual Studio או VS Code לפי פרופיל `http` או `https`. אם מופיעה אזהרת תעודת HTTPS מקומית, פועלים לפי הגדרת סביבת הפיתוח המקומית של .NET.
+You can also run the project from Visual Studio or VS Code using the `http` or `https` profile. If you see a local HTTPS certificate warning, follow the .NET instructions for your local development environment.
 
 ### Frontend
 
-בטרמינל שני:
+In a second terminal:
 
 ```powershell
 Set-Location frontend
@@ -156,34 +156,69 @@ npm install
 ng s -o
 ```
 
-פותחים `http://localhost:4200/`. בזמן הפיתוח Angular יבנה מחדש לאחר שינויים. בדיקות שימושיות:
+Open `http://localhost:4200/`. During development, Angular rebuilds after changes. Useful checks:
 
 ```powershell
 npm run build
 npm test
 ```
 
-אם ה-Frontend אינו מצליח להתחבר, בודקים קודם שה-API רץ, שהכתובת בשירות ה-HTTP תואמת לפרופיל שנבחר, ושאין חסימת תעודת HTTPS או CORS.
+If the frontend cannot connect, first check that the API is running, that the URL in the HTTP service matches the selected profile, and that the HTTPS certificate or CORS is not blocking the request.
 
-## 7. `plan.md` הוא מקור האמת
+## 7. `plan.md` Is the Source of Truth
 
-`plan.md` הוא מסמך העבודה המרכזי של הפרויקט, מעין "סיסמת כניסה" משותפת להבנת ההקשר לפני כל משימה. הוא מגדיר את סדר השלבים, החלטות שאושרו, מגבלות, תלויות, סטטוס, handoffs ותוצאות בדיקה.
+`plan.md` is the project's central working document—a shared starting point for understanding the context before each task. It defines the phase order, approved decisions, constraints, dependencies, status, handoffs, and test results.
 
-לפני שמתחילים משימה:
+Before starting a task:
 
-1. קוראים את ה-Mission, ה-Status וה-Execution Contract.
-2. בודקים באיזה שלב המשימה נמצאת ומה חסום.
-3. מאמתים שהקבצים המתוכננים נמצאים בתחום האחריות.
-4. לאחר העבודה מוסיפים לוג handoff קצר עם קבצים ששונו, בדיקות, סיכונים ותלות בשלב הבא.
+1. Read the Mission, Status, and Execution Contract.
+2. Check the task's phase and whether anything is blocking it.
+3. Confirm that the planned files are within your area of responsibility.
+4. After the work, add a brief handoff log listing changed files, tests, risks, and dependencies for the next phase.
 
-## 8. סדר כניסה מומלץ ביום הראשון
+## 8. Recommended First-Day Checklist
 
-1. לשכפל את המאגר ולפתוח את `Gilli`.
-2. לקרוא את `plan.md` ואת המדריך הזה.
-3. להריץ `dotnet build` ו-`npm run build` כדי לזהות את מצב הבסיס.
-4. להפעיל את ה-API ולוודא ש-Swagger נפתח.
-5. להפעיל את Angular ולוודא שהאפליקציה נטענת ב-`localhost:4200`.
-6. לבחור מודול אחד, לקרוא את ה-agent וה-skill המתאימים, ולהכין Gated Sub-plan לפני שינוי קוד.
-7. לתאם עם השותף את הקבצים המשותפים ואת גבולות המשימה.
+1. Clone the repository and create the `Gilli` branch.
+2. Read `plan.md` and this guide.
+3. Run `dotnet build` and `npm run build` to check the baseline.
+4. Start the API and confirm that Swagger opens.
+5. Start Angular and confirm that the app loads at `localhost:4200`.
+6. Choose one module, read its relevant agent and skill instructions, and prepare a Gated Sub-Plan before changing code.
+7. Coordinate with your teammate on shared files and task boundaries.
 
-כך נשמור על קצב עבודה נעים, היסטוריה ברורה, פחות התנגשויות ויכולת לחבר את כל חלקי ה-MVP בהדרגה.
+This workflow helps us maintain a steady pace, a clear history, fewer conflicts, and a way to integrate the MVP's parts incrementally.
+
+## API Environment Configuration
+
+The API reads secrets and machine-specific settings from environment variables. Do not
+put them in `appsettings*.json`, commit them, or paste live values into documentation.
+For a local Development run, set:
+
+```powershell
+$env:JWTSettings__SecretKey = "<new random secret of at least 32 bytes>"
+$env:ConnectionStrings__DefaultConnection = "<local SQL Server connection string>"
+dotnet run --launch-profile http
+```
+
+The Development profile allows only `localhost`/`127.0.0.1` hosts and the
+`http://localhost:4200` frontend origin. For deployment, provide all of the following
+through the deployment environment or secret manager:
+
+- `JWTSettings__SecretKey` (unique secret, at least 32 bytes)
+- `JWTSettings__Issuer`
+- `JWTSettings__Audience`
+- `JWTSettings__ExpirationInMinutes`
+- `ConnectionStrings__DefaultConnection`
+- `AllowedHosts` (semicolon-separated exact API host names; no wildcard)
+- `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1`, ... (exact HTTP(S) origins,
+  with no path or wildcard)
+
+Startup fails when required JWT/database settings, explicit hosts, or explicit CORS
+origins are missing or invalid. Rotate any JWT signing key exposed in prior commits by
+setting a new random key in the trusted deployment secret store; this invalidates
+existing tokens. The configured local connection string previously used Windows
+Integrated Authentication, so verify and rotate/restrict the database service identity
+and its permissions separately if that identity or database endpoint was exposed.
+
+The simulated payment route is Development-only. It is not a payment provider and
+must not be used to settle real purchases.

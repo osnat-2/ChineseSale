@@ -8,10 +8,13 @@
 
   <aside class="home-account">
     <p class="eyebrow">{{ 'home.account' | translate }}</p>
-    <p>{{ 'home.accountIntro' | translate }}</p>
+    <p>{{ (isAuthenticated() ? 'home.signedInIntro' : 'home.accountIntro') | translate }}</p>
     <div class="home-account-actions">
-      <a routerLink="/login">{{ 'home.login' | translate }}</a>
-      <a routerLink="/register">{{ 'home.register' | translate }}</a>
+      <a *ngIf="isAuthenticated()" [routerLink]="isAdmin() ? '/admin' : '/personal-area'">
+        {{ (isAdmin() ? 'nav.admin' : 'nav.personalArea') | translate }}
+      </a>
+      <a *ngIf="!isAuthenticated()" routerLink="/login">{{ 'home.login' | translate }}</a>
+      <a *ngIf="!isAuthenticated()" routerLink="/register">{{ 'home.register' | translate }}</a>
     </div>
   </aside>
 </section>

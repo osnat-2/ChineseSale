@@ -3,6 +3,7 @@ export class presentModel {
   name!: string;
   donorId!: number;
   categoryId!: number;
+  categoryName?: string | null;
   quantity!: number;
   price!: number;
   description!: string;

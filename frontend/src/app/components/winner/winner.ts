@@ -6,6 +6,7 @@ import { winnerModel } from '../../models/winner';
 import { PresentService } from '../../services/presentService/present-service';
 import { WinnerService } from '../../services/winnerService/winner-service';
 import { Result } from '../../models/result';
+import { hasApiResponseMessage, readHttpErrorMessage } from '../../models/api-message';
 
 // Raffle Component - Draw winners and display raffle results
 @Component({
@@ -63,31 +64,20 @@ export class Winner {
       next: (response: Result<winnerModel>) => {
         const winner = response.data?.[0];
         if (!response.success || !winner) {
-          this.errorMessage = this.readDrawError(response.message);
+          this.errorMessage = hasApiResponseMessage(response) ? '' : 'winner.drawFailed';
           this.drawing = false;
           return;
         }
 
         this.winnerService.markDrawn(this.selectedPresentId!, winner);
         this.latestWinner = winner;
-        this.successMessage = 'winner.drawSuccess';
+        this.successMessage = hasApiResponseMessage(response) ? '' : 'winner.drawSuccess';
         this.drawing = false;
       },
-      error: (error) => {
-        this.errorMessage = this.readDrawError(error?.error?.message);
+      error: (error: unknown) => {
+        this.errorMessage = readHttpErrorMessage(error) ? '' : 'winner.drawFailed';
         this.drawing = false;
       }
     });
-  }
-
-  readDrawError(message?: string | null): string {
-    const normalized = message?.toLowerCase() ?? '';
-    if (normalized.includes('no paid cards')) {
-      return 'winner.noPaidCards';
-    }
-    if (normalized.includes('already') || normalized.includes('made out') || normalized.includes('drawn')) {
-      return 'winner.alreadyDrawn';
-    }
-    return message || 'winner.drawFailed';
   }
 }

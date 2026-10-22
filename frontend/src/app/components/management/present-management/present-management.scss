@@ -1,1 +1,10 @@
 @use '../management-shared';
+
+.present-image-preview {
+  display: block;
+  width: 10rem;
+  max-width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+  border-radius: 0.75rem;
+}

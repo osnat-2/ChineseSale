@@ -1,6 +1,10 @@
 <section class="management-page">
   <header class="management-header">
     <div>
+      <a routerLink="/admin" class="management-back-link">
+        <span class="management-back-arrow" aria-hidden="true">←</span>
+        {{ 'management.backToMenu' | translate }}
+      </a>
       <p class="eyebrow">{{ 'management.donorEyebrow' | translate }}</p>
       <h1>{{ 'management.donorTitle' | translate }}</h1>
     </div>
@@ -9,50 +13,72 @@
     </button>
   </header>
 
-  <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
+  <p *ngIf="actionError && !formOpen && deleteConfirmationId === null" class="state-message error" role="alert">{{ actionError | translate }}</p>
   <p *ngIf="actionSuccess" class="state-message success" role="status">{{ actionSuccess | translate }}</p>
-  <p *ngIf="loadError" class="state-message error" role="alert">{{ loadError | translate }}</p>
+  <div *ngIf="loadError" class="state-message error" role="alert">
+    <span>{{ loadError | translate }}</span>
+    <button type="button" class="secondary-action" (click)="loadDonors()" [disabled]="loading">
+      {{ 'management.retry' | translate }}
+    </button>
+  </div>
 
-  <form *ngIf="formOpen" #donorForm="ngForm" class="management-form" (ngSubmit)="saveDonor(donorForm)">
-    <h2>{{ (editingDonorId === null ? 'forms.addDonor' : 'forms.editDonor') | translate }}</h2>
+  <div *ngIf="formOpen" class="management-modal-backdrop">
+    <section class="management-modal" role="dialog" aria-modal="true" aria-labelledby="donor-form-title" tabindex="-1" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="closeForm()">
+      <div class="management-modal-header">
+        <h2 id="donor-form-title">{{ (editingDonorId === null ? 'forms.addDonor' : 'forms.editDonor') | translate }}</h2>
+        <button type="button" class="management-modal-close" [attr.aria-label]="'management.cancel' | translate" [disabled]="saving" (click)="closeForm()">×</button>
+      </div>
+      <form #donorForm="ngForm" class="management-form" (ngSubmit)="saveDonor(donorForm)">
+        <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
+        <label>
+          {{ 'management.name' | translate }}
+          <input name="name" [(ngModel)]="formValue.name" required minlength="2" maxlength="100" pattern=".*\S.*" cdkFocusInitial>
+        </label>
+        <label>
+          {{ 'management.phone' | translate }}
+          <input name="phone" type="tel" [(ngModel)]="formValue.phone" required minlength="9" maxlength="20" pattern="^(?=.*[0-9])[0-9-]+$">
+        </label>
+        <label>
+          {{ 'management.email' | translate }}
+          <input name="email" type="email" [(ngModel)]="formValue.email" required maxlength="100">
+        </label>
+        <label *ngIf="editingDonorId === null">
+          {{ 'management.initialPassword' | translate }}
+          <input name="password" type="password" [(ngModel)]="formValue.password" required minlength="4" maxlength="72" autocomplete="new-password">
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="primary-action" [disabled]="donorForm.invalid || saving">
+            {{ (saving ? 'management.saving' : 'management.save') | translate }}
+          </button>
+          <button type="button" class="secondary-action" [disabled]="saving" (click)="closeForm()">
+            {{ 'management.cancel' | translate }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
 
-    <label>
-      {{ 'management.name' | translate }}
-      <input name="name" [(ngModel)]="formValue.name" required minlength="2" maxlength="100" pattern=".*\S.*">
-    </label>
-
-    <label>
-      {{ 'management.phone' | translate }}
-      <input name="phone" type="tel" [(ngModel)]="formValue.phone" required minlength="9" maxlength="20" pattern="^(?=.*[0-9])[0-9-]+$">
-    </label>
-
-    <label>
-      {{ 'management.email' | translate }}
-      <input name="email" type="email" [(ngModel)]="formValue.email" required maxlength="100">
-    </label>
-
-    <label *ngIf="editingDonorId === null">
-      {{ 'management.initialPassword' | translate }}
-      <input name="password" type="password" [(ngModel)]="formValue.password" required minlength="4" maxlength="72" autocomplete="new-password">
-    </label>
-
-    <div class="form-actions">
-      <button type="submit" class="primary-action" [disabled]="donorForm.invalid || saving">
-        {{ (saving ? 'management.saving' : 'management.save') | translate }}
-      </button>
-      <button type="button" class="secondary-action" (click)="closeForm()">
-        {{ 'management.cancel' | translate }}
-      </button>
-    </div>
-  </form>
-
-  <p *ngIf="loading" class="state-message">{{ 'management.loading' | translate }}</p>
+  <p *ngIf="loading && !donors.length" class="state-message" role="status">{{ 'management.loading' | translate }}</p>
+  <p *ngIf="loading && donors.length" class="state-message" role="status" aria-live="polite">{{ 'management.refreshing' | translate }}</p>
   <p *ngIf="!loading && !loadError && donors.length === 0" class="empty-state">
     {{ 'management.donorEmpty' | translate }}
   </p>
 
-  <div *ngIf="!loading && donors.length > 0" class="management-cards">
-    <article *ngFor="let donor of donors" class="management-card">
+  <div *ngIf="donors.length > 0" class="management-search" [attr.aria-busy]="loading">
+    <label for="donor-search">{{ 'management.searchRecords' | translate }}</label>
+    <div class="management-search-controls">
+      <input id="donor-search" type="search" [(ngModel)]="searchTerm" [placeholder]="'management.searchPlaceholder' | translate">
+      <button *ngIf="searchTerm" type="button" class="secondary-action" (click)="clearSearch()">
+        {{ 'management.clearSearch' | translate }}
+      </button>
+    </div>
+  </div>
+  <p *ngIf="!loading && !loadError && donors.length > 0 && !filteredDonors.length" class="empty-state">
+    {{ 'management.noSearchResults' | translate }}
+  </p>
+
+  <div *ngIf="filteredDonors.length > 0" class="management-cards" [attr.aria-busy]="loading">
+    <article *ngFor="let donor of filteredDonors" class="management-card">
       <div class="card-heading">
         <h2>{{ donor.name }}</h2>
         <span class="status" [class.inactive]="!donor.isActive">
@@ -71,17 +97,25 @@
           {{ 'management.delete' | translate }}
         </button>
       </div>
-      <div *ngIf="deleteConfirmationId === donor.id" class="confirmation" role="alertdialog">
-        <p>{{ 'management.confirmDeleteDonor' | translate }}</p>
-        <div class="card-actions">
-          <button type="button" class="danger-action" [disabled]="saving" (click)="deleteDonor(donor.id)">
-            {{ 'management.confirm' | translate }}
-          </button>
-          <button type="button" class="secondary-action" [disabled]="saving" (click)="cancelDelete()">
-            {{ 'management.cancel' | translate }}
-          </button>
-        </div>
-      </div>
     </article>
+  </div>
+
+  <div *ngIf="deleteConfirmationId as donorId" class="management-modal-backdrop">
+    <section class="management-modal" role="alertdialog" aria-modal="true" aria-labelledby="delete-donor-title" tabindex="-1" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="cancelDelete()">
+      <div class="management-modal-header">
+        <h2 id="delete-donor-title">{{ 'management.delete' | translate }} {{ 'management.donor' | translate }}</h2>
+        <button type="button" class="management-modal-close" autofocus [attr.aria-label]="'management.cancel' | translate" [disabled]="saving" (click)="cancelDelete()">×</button>
+      </div>
+      <p>{{ 'management.confirmDeleteDonor' | translate }}</p>
+      <p *ngIf="actionError" class="state-message error" role="alert">{{ actionError | translate }}</p>
+      <div class="form-actions">
+        <button type="button" class="danger-action" [disabled]="saving" (click)="deleteDonor(donorId)">
+          {{ (saving ? 'management.saving' : 'management.confirm') | translate }}
+        </button>
+        <button type="button" class="secondary-action" [disabled]="saving" (click)="cancelDelete()">
+          {{ 'management.cancel' | translate }}
+        </button>
+      </div>
+    </section>
   </div>
 </section>

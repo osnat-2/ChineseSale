@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { routes } from '../../app.routes';
 import { Admin } from './admin';
 
 describe('Admin', () => {
@@ -31,5 +32,17 @@ describe('Admin', () => {
     expect(compiled.textContent).toContain('Admin dashboard');
     expect(compiled.textContent).toContain('Present management');
     expect(compiled.textContent).toContain('Donor management');
+  });
+
+  it('offers lottery management and combines card and purchase management', () => {
+    const links = Array.from(fixture.nativeElement.querySelectorAll('.admin-card')) as HTMLAnchorElement[];
+    const lotteryLink = links.find((link) => link.textContent?.includes('Lottery management'));
+    const purchasesLink = links.find((link) => link.textContent?.includes('Cards & purchases management'));
+
+    expect(lotteryLink?.getAttribute('href')).toBe('/admin/winners');
+    expect(purchasesLink?.getAttribute('href')).toBe('/admin/purchases');
+    expect(links.some((link) => link.textContent?.includes('Card management'))).toBeFalse();
+    expect(routes.find((route) => route.path === 'admin/cards')?.redirectTo).toBe('admin/purchases');
+    expect(routes.find((route) => route.path === 'winner')?.redirectTo).toBe('admin/winners');
   });
 });

@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { UserService } from '../../services/userService/user-service';
 import { HttpService } from '../../services/httpService/http-service';
@@ -9,14 +9,15 @@ import { AuthService } from '../../services/authService/auth-service';
 
 @Component({
   selector: 'app-login',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslatePipe],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, TranslatePipe],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
-export class Login implements OnInit {
+export class Login {
   httpService: HttpService = inject(HttpService);
   userService: UserService = inject(UserService);
   router: Router = inject(Router);
+  route: ActivatedRoute = inject(ActivatedRoute);
   fb: FormBuilder = inject(FormBuilder);
   authService: AuthService = inject(AuthService);
 
@@ -35,7 +36,13 @@ export class Login implements OnInit {
     });
   }
 
+  get returnUrl(): string | null {
+    return this.route.snapshot.queryParamMap.get('returnUrl');
+  }
+
   login(): void {
+    console.log("Login function");
+
     if (this.loginForm.invalid) {
       this.errorMessage = 'auth.invalidForm';
       return;
@@ -49,24 +56,74 @@ export class Login implements OnInit {
       next: (response) => {
         this.isLoading = false;
         if (response.success !== true || typeof response.message !== 'string') {
-          this.errorMessage = response.message || 'auth.loginFailed';
+          this.authService.clearToken();
+          this.errorMessage = 'auth.loginFailed';
           return;
         }
         this.authService.setToken(response.message);
         if (!this.authService.isAuthenticated()) {
+          this.authService.clearToken();
           this.errorMessage = 'auth.invalidToken';
           return;
         }
-        if (this.authService.hasRole('User'))
-          this.router.navigate(['/catalog']);
-        if (this.authService.hasRole('Admin'))
-          this.router.navigate(['/admin']);
+        const defaultUrl = this.getDefaultUrl();
+        if (!defaultUrl) {
+          return;
+        }
+        const returnUrl = this.getSafeReturnUrl(this.returnUrl);
+        void this.router.navigateByUrl(returnUrl ?? defaultUrl);
       },
       error: (error) => {
         this.isLoading = false;
+        this.authService.clearToken();
         this.errorMessage =
-          error?.error?.message || error?.message || 'auth.loginTryAgain';
+          error?.status === 401 ? 'auth.invalidCredentials' : 'auth.loginTryAgain';
       },
     });
+  }
+
+  private getDefaultUrl(): string | null {
+    if (this.authService.isAdmin()) {
+      return '/admin';
+    }
+    if (this.authService.hasRole('Donor')) {
+      return '/personal-area';
+    }
+    if (this.authService.hasRole('User')) {
+      return '/catalog';
+    }
+
+    this.authService.clearToken();
+    this.errorMessage = 'auth.unsupportedRole';
+    return null;
+  }
+
+  private getSafeReturnUrl(returnUrl: string | null): string | null {
+    if (!returnUrl || !returnUrl.startsWith('/') || returnUrl.startsWith('//') || returnUrl.includes('\\')) {
+      return null;
+    }
+
+    try {
+      const urlTree = this.router.parseUrl(returnUrl);
+      const segments = urlTree.root.children['primary']?.segments.map((segment) => segment.path) ?? [];
+      const firstSegment = segments[0]?.toLowerCase();
+      const requiresAdmin =
+        firstSegment === 'admin' ||
+        firstSegment === 'present' ||
+        firstSegment === 'donor' ||
+        firstSegment === 'winner';
+
+      if (
+        firstSegment === 'login' ||
+        firstSegment === 'register' ||
+        (requiresAdmin && !this.authService.isAdmin())
+      ) {
+        return null;
+      }
+
+      return returnUrl;
+    } catch {
+      return null;
+    }
   }
 }

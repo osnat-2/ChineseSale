@@ -17,18 +17,28 @@ namespace Project.Bll
 
         public async Task<Result<Winner>> DrawWinnerForPresentAsync(int presentId, int? lotteryId = null)
         {
-            if (presentId <= 0)
+            if (presentId <= 0 || !lotteryId.HasValue || lotteryId.Value <= 0)
             {
                 return new Result<Winner>
                 {
                     Success = false,
-                    Message = "Invalid present id.",
+                    Message = "A valid present id and annual lottery id are required.",
                     Data = null
                 };
             }
 
             return await _winnerDal.DrawWinnerForPresentAsync(presentId, lotteryId);
         }
+
+        public Task<Result<Winner>> ProcessLotteryAsync(int lotteryId) =>
+            lotteryId > 0
+                ? _winnerDal.ProcessLotteryAsync(lotteryId)
+                : Task.FromResult(new Result<Winner>
+                {
+                    Success = false,
+                    Message = "Invalid lottery id.",
+                    Data = null
+                });
 
         //public async Task<Result<Dictionary<Present, List<User>>>> GetPresentsWithUsersAsync()
         //{

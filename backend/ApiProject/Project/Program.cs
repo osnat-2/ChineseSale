@@ -10,6 +10,7 @@ using Project.Bll;
 using Project.Bll.Interfaces;
 using Project.Dal;
 using Project.Dal.Interfaces;
+using Project.Json;
 using Project.Middlewares;
 using Serilog;
 using System.Text;
@@ -39,6 +40,7 @@ builder.Services.AddControllers().AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+    options.SerializerSettings.Converters.Add(new DateOnlyJsonConverter());
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -72,8 +74,14 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("ConnectionStrings:DefaultConnection must be configured.");
+}
+
 builder.Services.AddDbContext<AppDBContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // Dependency Injection Scopes
 builder.Services.AddScoped<ICardService, CardService>();
@@ -84,6 +92,8 @@ builder.Services.AddScoped<ILotteryService, LotteryService>();
 builder.Services.AddScoped<ILotteryDal, LotteryDal>();
 builder.Services.AddScoped<IPresentService, PresentService>();
 builder.Services.AddScoped<IPresentDal, PresentDal>();
+builder.Services.AddSingleton<PresentImageStorage>();
+builder.Services.AddScoped<PresentResponseMapper>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IRoleDal, RoleDal>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -99,6 +109,17 @@ builder.Services.Configure<JWTSettings>(builder.Configuration.GetSection("JWTSet
 // Configure JWT authentication
 var jwtSection = builder.Configuration.GetSection("JWTSettings");
 var jwtSettings = jwtSection.Get<JWTSettings>();
+if (jwtSettings == null ||
+    string.IsNullOrWhiteSpace(jwtSettings.SecretKey) ||
+    Encoding.UTF8.GetByteCount(jwtSettings.SecretKey) < 18 ||
+    string.IsNullOrWhiteSpace(jwtSettings.Issuer) ||
+    string.IsNullOrWhiteSpace(jwtSettings.Audience) ||
+    jwtSettings.ExpirationInMinutes <= 0)
+{
+    throw new InvalidOperationException(
+        "JWTSettings must include a secret of at least 32 bytes, issuer, audience, and positive expiration.");
+}
+
 var key = Encoding.UTF8.GetBytes(jwtSettings.SecretKey);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -116,16 +137,31 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Configure CORS
+var allowedHosts = builder.Configuration["AllowedHosts"]?
+    .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [];
+if (allowedHosts.Length == 0 || allowedHosts.Any(host => host.Contains('*')))
+{
+    throw new InvalidOperationException("AllowedHosts must contain explicit host names for this environment.");
+}
+
+// var allowedOrigins = builder.Configuration
+//     .GetSection("Cors:AllowedOrigins")
+//     .Get<string[]>() ?? [];
+// if (allowedOrigins.Length == 0 ||
+//     allowedOrigins.Any(origin =>
+//         !Uri.TryCreate(origin, UriKind.Absolute, out var uri) ||
+//         (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps) ||
+//         !string.Equals(origin, uri.GetLeftPart(UriPartial.Authority), StringComparison.OrdinalIgnoreCase)))
+// {
+//     throw new InvalidOperationException("Cors:AllowedOrigins must contain explicit HTTP or HTTPS origins.");
+// }
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("MyAllowSpecificOrigins",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:4200")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
+        policy => policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 
 var app = builder.Build();
@@ -147,10 +183,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 
 // Enable CORS middleware
 app.UseCors("MyAllowSpecificOrigins");
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
 
 app.UseAuthentication(); // 1. ���� ������� �� ������
 app.UseAuthorization();

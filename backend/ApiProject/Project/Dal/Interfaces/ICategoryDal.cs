@@ -6,6 +6,7 @@ namespace Project.Dal.Interfaces
     {
         Task<Result<Category>> GetAllCategoriesAsync(bool includeInactive = false);
         Task<Result<Category>> GetCategoryByIdAsync(int id);
+        Task<IReadOnlyDictionary<int, string>> GetCategoryNamesByIdsAsync(IReadOnlyCollection<int> ids);
         Task<Result<bool>> CategoryNameExistsAsync(string name, int? excludeCategoryId = null);
         Task<Result<Category>> CreateCategoryAsync(Category category);
         Task<Result<Category>> UpdateCategoryAsync(Category category);

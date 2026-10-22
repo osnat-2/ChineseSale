@@ -224,5 +224,15 @@ public class DonorManagementTests
             Task.FromResult(DonorResult());
 
         public Task<Result<User>> DeleteDonorAsync(int id) => Task.FromResult(DonorResult());
+
+        public Task<Result<User>> GetAllManagedUsersAsync() => Task.FromResult(DonorResult());
+
+        public Task<Result<User>> CreateManagedUserAsync(ManagedUserCreateDto userDto, int createdBy) =>
+            Task.FromResult(DonorResult());
+
+        public Task<Result<User>> UpdateManagedUserAsync(int id, ManagedUserUpdateDto userDto) =>
+            Task.FromResult(DonorResult());
+
+        public Task<Result<User>> DeleteManagedUserAsync(int id) => Task.FromResult(DonorResult());
     }
 }

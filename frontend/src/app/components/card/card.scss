@@ -1,0 +1,12 @@
+.card-present p { color: var(--color-text-muted); }
+.card-present .present-category { display: flex; gap: .35rem; margin-block: .25rem 0; }
+.present-category span { font-weight: 650; }
+.card-review-heading, .card-review-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.card-review-heading h2, .card-present h3 { margin: 0; }
+.card-review-heading > span { color: var(--color-text-muted); }
+.card-review-list { gap: .75rem; margin-block: 1.25rem; }
+.card-present p { margin-block: .25rem 0; }
+.remove-card-action { flex: 0 0 auto; border-color: var(--color-border); background: var(--color-surface-hover); color: var(--color-text); }
+.card-review-actions { justify-content: flex-end; flex-wrap: wrap; padding-block-start: 1rem; border-block-start: 1px solid var(--color-border); }
+.card-review-actions > a:not(.primary-link) { display: inline-flex; min-height: 2.75rem; align-items: center; padding-inline: .5rem; font-weight: 600; }
+@media (max-width: 560px) { .card-review-heading, .card-review-list li { align-items: flex-start; flex-direction: column; } .card-review-actions { align-items: stretch; flex-direction: column-reverse; } .card-review-actions > a { justify-content: center; } .remove-card-action { width: 100%; } }

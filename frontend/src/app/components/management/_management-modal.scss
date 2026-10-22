@@ -1,0 +1,113 @@
+@mixin styles {
+  .management-modal-backdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    overflow-y: auto;
+    padding: 1rem;
+    background: rgb(5 8 12 / 76%);
+    backdrop-filter: blur(5px);
+  }
+
+  .management-modal {
+    width: min(100%, 42rem);
+    max-height: min(90vh, 56rem);
+    overflow-y: auto;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-card);
+  }
+
+  .management-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .management-modal-header h2 {
+    margin: 0;
+  }
+
+  .management-modal-close {
+    display: grid;
+    flex: 0 0 auto;
+    width: 2.5rem;
+    min-height: 2.5rem;
+    place-items: center;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    background: var(--color-surface-raised);
+    cursor: pointer;
+    font: inherit;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .management-modal .management-form {
+    gap: 1rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .management-modal .form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .management-modal .primary-action,
+  .management-modal .secondary-action,
+  .management-modal .danger-action {
+    min-height: 2.75rem;
+    padding: 0.65rem 1rem;
+    border: 0;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+  }
+
+  .management-modal .primary-action {
+    color: #0b1514;
+    background: var(--color-accent);
+  }
+
+  .management-modal .secondary-action {
+    color: var(--color-text);
+    background: var(--color-surface-raised);
+  }
+
+  .management-modal .danger-action {
+    color: var(--color-text);
+    background: var(--color-danger-surface);
+    border: 1px solid var(--color-danger);
+  }
+
+  .management-modal button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  .management-modal > p {
+    margin: 0 0 1rem;
+  }
+
+  @media (max-width: 36rem) {
+    .management-modal .form-actions {
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
+}

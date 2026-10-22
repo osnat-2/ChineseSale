@@ -73,6 +73,19 @@ a:hover {
   color: var(--color-text);
 }
 
+.management-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-block-end: 0.75rem;
+  font-weight: 600;
+}
+
+[dir='rtl'] .management-back-arrow {
+  transform: scaleX(-1);
+  underline-offset: 0em;
+}
+
 button {
   color: inherit;
 }
@@ -89,6 +102,28 @@ img {
 ::selection {
   color: var(--color-canvas);
   background: var(--color-accent);
+}
+
+.api-message-snackbar .mat-mdc-snack-bar-surface {
+  border: 1px solid var(--color-border);
+  border-inline-start: 0.25rem solid var(--color-accent);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-float);
+  color: var(--color-text);
+  background: #262a3d;
+  font-family: var(--font-sans);
+}
+
+.api-message-success .mat-mdc-snack-bar-surface {
+  border-inline-start-color: var(--color-success);
+}
+
+.api-message-error .mat-mdc-snack-bar-surface {
+  border-inline-start-color: var(--color-danger);
+}
+
+.api-message-snackbar .mat-mdc-button.mat-mdc-snack-bar-action {
+  color: var(--color-accent-strong);
 }
 
 .app-content :where(.purchase-page, .management-page, .admin-dashboard, .catalog-page, .detail-page, .winner-page) {
@@ -151,6 +186,85 @@ img {
 .app-content button:disabled {
   cursor: not-allowed;
   opacity: 0.58;
+}
+
+.app-content .primary-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: #0b1514;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-content .primary-link:hover {
+  background: var(--color-accent-strong);
+  color: #0b1514;
+}
+
+.app-content .primary-link:focus-visible {
+  outline: 3px solid var(--color-highlight);
+  outline-offset: 3px;
+}
+
+.app-content .purchase-header {
+  max-width: 48rem;
+  margin-block: 1.5rem 2rem;
+}
+
+.app-content .purchase-header h1 {
+  margin-block: 0.2rem 0.75rem;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+}
+
+.app-content .eyebrow {
+  margin: 0;
+  color: var(--color-highlight);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.app-content .purchase-state,
+.app-content .purchase-message {
+  margin-block: 1rem;
+}
+
+.app-content .purchase-state {
+  padding: 1rem;
+  color: var(--color-text-muted);
+}
+
+.app-content .purchase-refresh {
+  padding-block: 0.75rem;
+}
+
+.app-content .purchase-message {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+}
+
+.app-content .purchase-error {
+  border-inline-start: 0.25rem solid var(--color-danger);
+  background: var(--color-danger-surface);
+  color: var(--color-danger);
+}
+
+.app-content .purchase-success {
+  border-inline-start: 0.25rem solid var(--color-success);
+  background: var(--color-success-surface);
+  color: var(--color-success);
 }
 
 .app-content input,

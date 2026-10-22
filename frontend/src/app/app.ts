@@ -9,4 +9,7 @@ import { Navbar } from './components/navbar/navbar';
   styleUrl: './app.scss'
 })
 export class App {
+  ngOnInit(): void {
+    // clearToken();
+  }
 }

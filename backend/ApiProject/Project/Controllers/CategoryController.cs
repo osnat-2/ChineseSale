@@ -27,6 +27,11 @@ namespace Project.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<Result<Category>>> GetAllCategories([FromQuery] bool includeInactive = false)
         {
+            if (includeInactive && !User.IsInRole("Admin"))
+            {
+                return User.Identity?.IsAuthenticated == true ? Forbid() : Unauthorized();
+            }
+
             var result = await _categoryService.GetAllCategoriesAsync(includeInactive);
 
             if (result.Success)

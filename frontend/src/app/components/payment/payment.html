@@ -1,14 +1,143 @@
 <main class="purchase-page">
-	<a routerLink="/card">{{ 'payment.back' | translate }}</a>
-	<h1>{{ 'payment.title' | translate }}</h1>
-	<p *ngIf="loading" role="status">{{ 'payment.loading' | translate }}</p>
-	<p *ngIf="errorMessage" role="alert">{{ errorMessage | translate }}</p>
-	<p *ngIf="successMessage" role="status">{{ successMessage | translate }}</p>
-	<ul *ngIf="!loading && cards.length">
-		<li *ngFor="let card of cards">{{ 'card.reference' | translate:{cardId: card.id, presentId: card.presentId} }}</li>
-	</ul>
-		<p *ngIf="!loading && !cards.length && !successMessage">{{ 'payment.empty' | translate }}</p>
-	<button type="button" (click)="pay()" [disabled]="loading || paying || cards.length === 0">
-			{{ paying ? ('payment.processing' | translate) : ('payment.pay' | translate) }}
-	</button>
+  <a routerLink="/card">{{ 'payment.back' | translate }}</a>
+  <header class="purchase-header">
+    <p class="eyebrow">{{ 'payment.eyebrow' | translate }}</p>
+    <h1>{{ 'payment.title' | translate }}</h1>
+    <p>{{ 'payment.intro' | translate }}</p>
+  </header>
+
+  <p *ngIf="loading && !cards.length" class="purchase-state" role="status">{{ 'payment.loading' | translate }}</p>
+  <p *ngIf="loading && cards.length" class="purchase-state purchase-refresh" role="status" aria-live="polite">
+    {{ 'payment.refreshing' | translate }}
+  </p>
+  <div *ngIf="errorMessage" class="purchase-message purchase-error" role="alert">
+    <span>{{ errorMessage | translate }}</span>
+    <button
+      *ngIf="errorMessage === 'payment.loadFailed' || errorMessage === 'payment.refreshFailed'"
+      type="button"
+      class="secondary-action"
+      (click)="loadUnpaidCards()"
+      [disabled]="loading || paying">
+      {{ 'payment.retry' | translate }}
+    </button>
+  </div>
+  <div *ngIf="successMessage" class="purchase-message purchase-success" role="status">
+    <span>{{ successMessage | translate }}</span>
+    <a routerLink="/personal-area">{{ 'payment.viewAccount' | translate }}</a>
+  </div>
+
+  <section *ngIf="!loading && !cards.length && !errorMessage && !successMessage" class="purchase-empty info-card">
+    <h2>{{ 'payment.emptyTitle' | translate }}</h2>
+    <p>{{ 'payment.empty' | translate }}</p>
+    <a class="primary-link" routerLink="/catalog">{{ 'payment.browse' | translate }}</a>
+  </section>
+
+  <section *ngIf="cards.length" class="checkout-card info-card" [attr.aria-busy]="loading || paying">
+    <div class="checkout-card-heading">
+      <h2>{{ 'payment.items' | translate }}</h2>
+      <a routerLink="/card">{{ 'payment.editSelection' | translate }}</a>
+    </div>
+    <ul class="checkout-list">
+      <li *ngFor="let group of checkoutGroups">
+        <div>
+          <h3><bdi>{{ group.presentName || ('card.presentUnavailable' | translate) }}</bdi></h3>
+          <p class="present-category">
+            <span>{{ 'catalog.category' | translate }}:</span>
+            <bdi>{{ group.categoryName || ('catalog.categoryUnavailable' | translate) }}</bdi>
+          </p>
+          <p>{{ 'card.cardCount' | translate:{count: group.quantity} }}</p>
+        </div>
+        <strong *ngIf="group.subtotal !== null; else subtotalUnavailable">
+          {{ group.subtotal | localizedCurrency:'ILS' }}
+        </strong>
+        <ng-template #subtotalUnavailable>
+          <span class="unavailable-price">{{ 'payment.priceUnavailable' | translate }}</span>
+        </ng-template>
+      </li>
+    </ul>
+
+    <div *ngIf="canPay" class="checkout-total">
+      <span>{{ 'payment.amountDue' | translate }}</span>
+      <strong>{{ amountDue | localizedCurrency:'ILS' }}</strong>
+    </div>
+    <p *ngIf="!canPay" class="payment-warning" role="alert">{{ 'payment.amountUnavailable' | translate }}</p>
+    <p *ngIf="!developmentPaymentsEnabled" class="payment-warning" role="note">
+      {{ 'payment.developmentDisabled' | translate }}
+    </p>
+    <p *ngIf="developmentPaymentsEnabled" class="payment-note">{{ 'payment.developmentNote' | translate }}</p>
+    <form
+      *ngIf="developmentPaymentsEnabled"
+      class="payment-form"
+      [formGroup]="paymentForm"
+      (ngSubmit)="pay()"
+      novalidate>
+      <h3>{{ 'payment.cardDetails' | translate }}</h3>
+      <div class="payment-fields">
+        <div class="payment-field">
+          <label for="cardholder-name">{{ 'payment.cardholderName' | translate }}</label>
+          <input
+            id="cardholder-name"
+            type="text"
+            formControlName="cardholderName"
+            autocomplete="cc-name"
+            maxlength="100"
+            [attr.aria-invalid]="paymentForm.controls.cardholderName.invalid && paymentForm.controls.cardholderName.touched">
+          <small *ngIf="paymentForm.controls.cardholderName.touched && paymentForm.controls.cardholderName.invalid">
+            {{ 'payment.cardholderNameInvalid' | translate }}
+          </small>
+        </div>
+
+        <div class="payment-field">
+          <label for="card-number">{{ 'payment.cardNumber' | translate }}</label>
+          <input
+            id="card-number"
+            type="text"
+            inputmode="numeric"
+            autocomplete="cc-number"
+            maxlength="23"
+            formControlName="cardNumber"
+            [attr.aria-invalid]="paymentForm.controls.cardNumber.invalid && paymentForm.controls.cardNumber.touched">
+          <small *ngIf="paymentForm.controls.cardNumber.touched && paymentForm.controls.cardNumber.invalid">
+            {{ 'payment.cardNumberInvalid' | translate }}
+          </small>
+        </div>
+
+        <div class="payment-field">
+          <label for="card-expiration">{{ 'payment.expiration' | translate }}</label>
+          <input
+            id="card-expiration"
+            type="month"
+            autocomplete="cc-exp"
+            formControlName="expiration"
+            [attr.aria-invalid]="paymentForm.controls.expiration.invalid && paymentForm.controls.expiration.touched">
+          <small *ngIf="paymentForm.controls.expiration.touched && paymentForm.controls.expiration.invalid">
+            {{ 'payment.expirationInvalid' | translate }}
+          </small>
+        </div>
+
+        <div class="payment-field">
+          <label for="card-security-code">{{ 'payment.securityCode' | translate }}</label>
+          <input
+            id="card-security-code"
+            type="password"
+            inputmode="numeric"
+            autocomplete="cc-csc"
+            maxlength="4"
+            formControlName="securityCode"
+            [attr.aria-invalid]="paymentForm.controls.securityCode.invalid && paymentForm.controls.securityCode.touched">
+          <small *ngIf="paymentForm.controls.securityCode.touched && paymentForm.controls.securityCode.invalid">
+            {{ 'payment.securityCodeInvalid' | translate }}
+          </small>
+        </div>
+      </div>
+
+      <button
+        class="pay-action"
+        type="submit"
+        [disabled]="loading || paying || !canPay || paymentForm.invalid"
+        [attr.aria-busy]="paying">
+        {{ paying ? ('payment.processing' | translate) : ('payment.pay' | translate) }}
+      </button>
+    </form>
+  </section>
 </main>

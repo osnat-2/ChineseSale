@@ -1,14 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Project;
+using Project.Bll;
+using Project.Controllers;
 using Project.Dal;
 using Project.Models;
+using System.Reflection;
 using Xunit;
 
 namespace Project.Tests;
 
 public class PresentManagementTests
 {
+    [Fact]
+    public void GetMyPresents_RequiresDonorRole()
+    {
+        var authorization = typeof(PresentController)
+            .GetMethod(nameof(PresentController.GetMyPresentsAsync))!
+            .GetCustomAttribute<AuthorizeAttribute>();
+
+        Assert.Equal("Donor", authorization?.Roles);
+    }
+
     [Fact]
     public async Task GetAllPresents_OnlyIncludesInactiveWhenRequested()
     {
@@ -36,6 +50,32 @@ public class PresentManagementTests
 
         Assert.Single(activeOnly.Data!);
         Assert.Equal(2, allActiveStates.Data!.Count());
+    }
+
+    [Fact]
+    public async Task GetPresentsByDonorId_ReturnsAllPresentStatusesForOnlyThatDonor()
+    {
+        await using var dbContext = CreateContext();
+        var role = new Role { Id = 1, Name = "Donor", Description = "Gift donor", IsActive = true };
+        dbContext.Role.Add(role);
+        dbContext.User.AddRange(
+            CreateDonor(1, role),
+            CreateDonor(2, role));
+        var activePresent = CreatePresent(1, "Active present", isActive: true);
+        var inactivePresent = CreatePresent(2, "Inactive present", isActive: false);
+        var deletedPresent = CreatePresent(3, "Deleted present", isActive: false);
+        deletedPresent.IsDeleted = true;
+        var otherDonorPresent = CreatePresent(4, "Other donor present", isActive: true);
+        otherDonorPresent.DonorId = 2;
+        dbContext.Present.AddRange(activePresent, inactivePresent, deletedPresent, otherDonorPresent);
+        await dbContext.SaveChangesAsync();
+
+        var result = await CreateDal(dbContext).GetPresentsByDonorIdAsync(1);
+
+        Assert.True(result.Success);
+        Assert.Equal(
+            new[] { "Active present", "Deleted present", "Inactive present" },
+            result.Data!.Select(present => present.Name));
     }
 
     [Fact]
@@ -77,6 +117,104 @@ public class PresentManagementTests
         Assert.NotNull(updated.UpdatedAt);
     }
 
+    [Fact]
+    public async Task PresentResponseMapper_IncludesActiveInactiveAndSoftDeletedCategoryNames()
+    {
+        await using var dbContext = CreateContext();
+        dbContext.Category.AddRange(
+            new Category { Id = 1, Name = "Books", IsActive = true, IsDeleted = false },
+            new Category { Id = 2, Name = "Home", IsActive = false, IsDeleted = false },
+            new Category { Id = 3, Name = "Archived", IsActive = false, IsDeleted = true });
+        await dbContext.SaveChangesAsync();
+        var mapper = new PresentResponseMapper(
+            new CategoryDal(dbContext, NullLogger<CategoryDal>.Instance));
+        var result = new Result<Present>
+        {
+            Success = true,
+            Message = "Loaded",
+            Data = new[]
+            {
+                CreatePresent(1, "Book present", isActive: true),
+                new Present
+                {
+                    Id = 2,
+                    Name = "Home present",
+                    Description = "Description",
+                    DonorId = 1,
+                    CategoryId = 2,
+                    Quantity = 1,
+                    Price = 10,
+                    ImageUrl = "https://example.com/present.jpg",
+                    IsActive = true
+                },
+                new Present
+                {
+                    Id = 3,
+                    Name = "Archived present",
+                    Description = "Description",
+                    DonorId = 1,
+                    CategoryId = 3,
+                    Quantity = 1,
+                    Price = 10,
+                    ImageUrl = "https://example.com/present.jpg",
+                    IsActive = true
+                }
+            }
+        };
+
+        var response = await mapper.MapPresentsAsync(result);
+
+        Assert.True(response.Success);
+        Assert.Equal("Loaded", response.Message);
+        Assert.Equal(new[] { "Books", "Home", "Archived" }, response.Data!.Select(item => item.CategoryName));
+    }
+
+    [Fact]
+    public async Task PresentResponseMapper_PreservesWrapperAndMapsNestedCardPresent()
+    {
+        await using var dbContext = CreateContext();
+        dbContext.Category.Add(new Category
+        {
+            Id = 1,
+            Name = "Archived books",
+            IsActive = false,
+            IsDeleted = true
+        });
+        await dbContext.SaveChangesAsync();
+        var mapper = new PresentResponseMapper(
+            new CategoryDal(dbContext, NullLogger<CategoryDal>.Instance));
+        var present = CreatePresent(1, "Book present", isActive: true);
+        var response = await mapper.MapCardsAsync(new Result<Card>
+        {
+            Success = false,
+            Message = "Cards could not be loaded.",
+            Data = new[]
+            {
+                new Card
+                {
+                    Id = 4,
+                    PresentId = present.Id,
+                    Present = present,
+                    IsPaid = false,
+                    IsActive = true
+                },
+                new Card
+                {
+                    Id = 5,
+                    PresentId = 99,
+                    IsPaid = false,
+                    IsActive = true
+                }
+            }
+        });
+
+        Assert.False(response.Success);
+        Assert.Equal("Cards could not be loaded.", response.Message);
+        var responseCards = response.Data!;
+        Assert.Equal("Archived books", responseCards.First().Present?.CategoryName);
+        Assert.Null(responseCards.Last().Present);
+    }
+
     private static AppDBContext CreateContext()
     {
         var options = new DbContextOptionsBuilder<AppDBContext>()
@@ -100,5 +238,17 @@ public class PresentManagementTests
             Price = 10,
             ImageUrl = "https://example.com/present.jpg",
             IsActive = isActive
+        };
+
+    private static User CreateDonor(int id, Role role) =>
+        new()
+        {
+            Id = id,
+            Name = $"Donor {id}",
+            Phone = "123456789",
+            Email = $"donor{id}@example.com",
+            RoleId = role.Id,
+            Role = role,
+            IsActive = true
         };
 }

@@ -11,10 +11,12 @@ namespace Project.Bll
     public class PresentService : IPresentService
     {
         IPresentDal _presentDal;
+        IUserDal _userDal;
         IMapper _mapper;
-        public PresentService(IPresentDal presentDal, IMapper mapper)
+        public PresentService(IPresentDal presentDal, IUserDal userDal, IMapper mapper)
         {
             _presentDal = presentDal;
+            _userDal = userDal;
             _mapper = mapper;
         }
 
@@ -55,6 +57,36 @@ namespace Project.Bll
                     Data = null
                 };
             }
+
+            // Check if the donor (by the donorId) has the roleId of donor (by getRoleByName)
+            var donor = await _userDal.GetUserById(presentDto.DonorId);
+            if (donor == null)
+            {
+                return new Result<Present>
+                {
+                    Success = false,
+                    Message = "This donor not exists",
+                    Data = null
+                };
+            }
+            var role = await _userDal.GetRoleByName("Donor");
+            if (role == null || donor.RoleId != role.Id)
+            {
+                return new Result<Present>
+                {
+                    Success = false,
+                    Message = "This user does not have the donor role",
+                    Data = null
+                };
+            }
+            // {
+            //     return new Result<Present>
+            //     {
+            //         Success = false,
+            //         Message = "This donor not exists or does not have the donor role",
+            //         Data = null
+            //     };
+            // }
 
             var present = _mapper.Map<Present>(presentDto);
             present.IsActive = true;
@@ -109,6 +141,21 @@ namespace Project.Bll
                 categoryId,
                 normalizedSortBy,
                 normalizedSortDirection);
+        }
+
+        public async Task<Result<Present>> GetPresentsByDonorIdAsync(int donorId)
+        {
+            if (donorId <= 0)
+            {
+                return new Result<Present>
+                {
+                    Success = false,
+                    Message = "Invalid donor ID.",
+                    Data = Enumerable.Empty<Present>()
+                };
+            }
+
+            return await _presentDal.GetPresentsByDonorIdAsync(donorId);
         }
 
         public async Task<Result<Present>> GetPresentByIdAsync(int id)

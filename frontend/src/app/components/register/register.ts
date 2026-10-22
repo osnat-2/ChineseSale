@@ -1,10 +1,11 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { UserService } from '../../services/userService/user-service';
 import { userDtoModel } from '../../models/ModelsDto/userDto';
+import { hasApiResponseMessage } from '../../models/api-message';
 
 @Component({
   selector: 'app-register',
@@ -15,6 +16,7 @@ import { userDtoModel } from '../../models/ModelsDto/userDto';
 export class Register implements OnInit {
   userService: UserService = inject(UserService);
   router: Router = inject(Router);
+  route: ActivatedRoute = inject(ActivatedRoute);
   fb: FormBuilder = inject(FormBuilder);
 
   registerForm!: FormGroup;
@@ -50,19 +52,24 @@ export class Register implements OnInit {
       next: (response) => {
         this.isSubmitting = false;
         if (response.success !== true) {
-          this.errorMessage = response.message || 'auth.registerFailed';
+          this.errorMessage = 'auth.registerFailed';
           return;
         }
-        this.successMessage = 'auth.registerSuccess';
+        this.successMessage = hasApiResponseMessage(response) ? '' : 'auth.registerSuccess';
         setTimeout(() => {
-          this.router.navigate(['/login']);
+          void this.router.navigate(['/login'], {
+            queryParams: this.returnUrl ? { returnUrl: this.returnUrl } : undefined,
+          });
         }, 2000);
       },
-      error: (error) => {
+      error: () => {
         this.isSubmitting = false;
-        this.errorMessage =
-          error?.error?.message || error?.message || 'auth.registerTryAgain';
+        this.errorMessage = 'auth.registerTryAgain';
       },
     });
+  }
+
+  get returnUrl(): string | null {
+    return this.route.snapshot.queryParamMap.get('returnUrl');
   }
 }

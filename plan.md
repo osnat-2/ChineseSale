@@ -243,6 +243,27 @@ Completed on 2026-09-08 after explicit approval of the Phase 3 catalogue scope.
 - The category endpoint's HTTP failure is intentionally non-blocking for catalogue rendering, so a category-load failure falls back to the all-category selector without an inline category error.
 - Existing Angular suite failures outside catalogue remain and should be repaired during the broader verification phase.
 
+### Catalogue Hover Controls — 2026-10-21
+
+- Moved authenticated quantity and Add to Basket controls into a card-image overlay and replaced the expanding `max-height` reveal with opacity/transform transitions. This keeps card/grid geometry fixed on hover and keyboard focus.
+- Touch devices continue to show controls inline. Reduced-motion preferences disable the reveal motion. Add-to-basket behavior, quantity validation, and API contracts are unchanged.
+- Static diagnostics report no errors. In the live catalog, browser verification confirmed the card bounding box has the same position and height before and after hover, with controls visible as an absolute overlay.
+- The configured catalog component spec could not be run because VS Code test discovery did not find a matching test item.
+
+### Catalogue Add Button Placement — 2026-10-21
+
+- Moved Add to Basket from the image overlay into a persistent row beside the present name immediately below the image. Kept the quantity selector and validation visible in a compact row below the title/action row, so users can select quantity without hover.
+- Removed the image dim/zoom and hover overlay styles. No catalog API, add behavior, or backend contract changed.
+- Static diagnostics report no errors. Live browser measurements confirmed the button is physically left of the title in the current RTL view and both remain below the image. The focused catalog spec could not run because VS Code test discovery did not resolve the spec.
+
+### Catalogue Add-to-Basket Quantity Dialog — 2026-10-21
+
+- The card-level Add to Basket button now opens an accessible quantity dialog instead of immediately calling the add API. The dialog contains the numeric selector, existing quantity validation, the actual Add to Basket submit action, and close/cancel controls.
+- Added Escape and backdrop dismissal, prevented dismissal while a request is pending, focused the quantity input when opened, and restored focus to the initiating card button when closed. API errors keep the dialog open; successful adds close it. Existing authenticated add-card API and request shape are unchanged.
+- Added English and Hebrew dialog copy and focused component tests for opening without posting, submitting quantity, validation, pending state, error retention, cancel, Escape, and focus behavior.
+- Static diagnostics report no errors. Live browser check confirmed the dialog title, prompt, default numeric quantity, input focus, distinct Add/Cancel actions, Escape dismissal, and focus restoration; closing it does not add a card. The focused npm test command could not compile because of TypeScript errors in unrelated card/personal-area specs and winner-management, so catalog tests did not execute. The frontend build is likewise blocked by a TypeScript error in winner-management.
+- Follow-up: on fine-pointer devices, the card-level Add to Basket button is visually hidden at rest and revealed on card hover or keyboard focus without changing card geometry; it remains visible on coarse-pointer/touch devices and respects reduced-motion settings. Live browser verification on desktop confirmed opacity 0 at rest, visible on hover/focus, and unchanged card dimensions. Dialog behavior and API flow are unchanged.
+
 ## Phase 4: Purchase/Payment
 
 ### Implementation Result
@@ -286,6 +307,28 @@ Residual risks:
 - The development payment endpoint marks all current owner cards paid; no payment entity or transaction reference exists by design.
 - Database migrations and database update commands were not run.
 
+### Personal Area Card Summary — 2026-10-21
+
+- Replaced the per-card ID reference in the personal area with summaries grouped by present and paid/unpaid state. Each row displays the present name, card count, and payment state; missing present navigation uses a localized fallback.
+- The personal area requests all owner cards when no `paid` filter is supplied. Updated `CardController.GetMyCards` to default the nullable `paid` filter to null while preserving explicit `paid=true` and `paid=false` filtering.
+- Added focused frontend coverage for grouped counts, multiple presents, mixed payment states, and hidden identifiers, plus backend DAL and controller coverage for the unfiltered default and explicit payment filters.
+- No DTO, model, migration, schema, payment lifecycle, or ownership changes were made.
+- Static diagnostics reported no errors in the touched frontend and backend files. Validation is otherwise pending: VS Code test discovery did not resolve the PersonalArea spec, and the configured npm test command could not start because sandboxed commands cannot access the local proxy. The backend test and frontend build have not yet run.
+
+### Card Page Summary — 2026-10-21
+
+- The earlier personal-area display change did not affect `/card`, which uses its own Card component and template. Updated that page to group unpaid cards by present and show only the present name and number of unpaid cards.
+- Preserved add-by-present-number and checkout behavior. Replaced each per-card remove button with “Remove one”; it still calls the existing owner-scoped delete endpoint and decrements/removes the group after server success. Card IDs remain internal and are not rendered.
+- Added English/Hebrew count, missing-present-name, and remove-one labels, plus focused Card component tests for grouping, hidden identifiers, and removal.
+- No backend or persistence changes were made. Static diagnostics report no errors in touched files. VS Code test discovery did not resolve the Card spec; the configured frontend test/build commands remain unverified due to sandbox command-execution restrictions.
+
+### Personal Area Paid and Unpaid Sections — 2026-10-21
+
+- Updated the personal area to make separate API requests for `paid=true` and `paid=false` rather than depend on the server's unfiltered default. Each status is grouped by present name and card count, with a localized empty-state message when one status has no cards.
+- Added English/Hebrew section headings and empty-state translations, plus component coverage for displaying both statuses and status-specific empty states. If either API request fails, the existing load error is shown instead of partial history.
+- No backend, payment, ownership, model, or persistence changes were made.
+- Static diagnostics report no errors in changed files. Reloaded the authenticated local page: it displays the paid summaries and explicitly reports that there are currently no unpaid cards for this account. Automated test execution remains unavailable because VS Code test discovery does not resolve these specs and sandboxed command execution is blocked.
+
 ## Phase 5: Admin
 
 ### Implementation Result
@@ -316,6 +359,77 @@ Completed on 2026-09-16 after explicit approval of the Phase 5 sub-plan.
 - Connected `/admin/winners` to the existing Admin-only persisted `/api/lottery/draw/{presentId}` endpoint, with a permanently visible Create Lottery action, present selection, and result/error states.
 - Added focused Angular management/service tests and backend donor/present/DTO tests. Angular management/service tests passed 17/17; backend tests passed 31/31 when excluding the unrelated `UserPasswordStorageTests` assertion that expects a 60-character password column while the current worktree uses 255. The full backend suite otherwise passed 31/32.
 - Angular production build passed with the existing unused-import and bundle-budget warnings. No model or migration files were modified.
+
+### Category, Role, and User Management — 2026-10-07
+
+Implemented after the user's request and approval of the bounded Phase 5 sub-plan.
+
+- Added Admin dashboard links and guarded `/admin/categories`, `/admin/roles`, and `/admin/users` routes. The category, role, and user screens keep their primary Add action visible with empty lists and show per-item update/delete controls with confirmation where applicable.
+- Connected category management to the existing category CRUD API. Added an active-state field to the existing category DTO flow so newly created categories default to active and administrators can edit category status; requests to include inactive categories are Admin-only.
+- Connected role management to the existing Admin-only role CRUD API. Built-in `User`, `Donor`, and `Admin` roles remain protected in both the UI and role API.
+- Added Admin-only `/api/admin/users` list/create/update/soft-delete endpoints over the existing `User` model. Passwords are hashed server-side and omitted from management response DTOs; assignment requires an active role. Self-deactivation/deletion, removal of the last active Admin, and deletion of donors still referenced by presents are rejected.
+- Added English/Hebrew management copy and focused frontend component/service tests plus backend category/user-management tests. No model, migration, or database changes were made.
+
+Validation:
+
+- Angular production build: passed. Existing unused-import, initial-bundle-budget, and stale Baseline Browser Mapping warnings remain.
+- Focused Angular management/service tests: 16 passed, 0 failed.
+- Backend test project excluding the pre-existing `UserPasswordStorageTests` column-length assertion: 44 passed, 0 failed. The standard test output is isolated under `C:\Temp\ChineseSaleValidation\bin` because the running API process locks the default output files.
+- Backend test restore reports existing NuGet vulnerability warnings for AutoMapper and Newtonsoft.Json.
+- No migration generation, database update, or live authenticated API journey was run.
+
+Residual risks:
+
+- The last-active-Admin rule is enforced in application logic and is not concurrency-safe if multiple administrator updates race; strict protection requires a database-supported constraint or transaction strategy.
+- The known password-column test mismatch remains outside this approved scope.
+
+### Management Popup UX — 2026-10-08
+
+Implemented after explicit approval to move management create/update/delete interactions into pop-ups.
+
+- Present, donor, category, role, and user create/edit forms now open in modal dialogs; delete actions use modal confirmation dialogs instead of inline confirmations.
+- User activation/deactivation is now edited in the same update modal rather than submitted immediately from the list.
+- Lottery execution opens a confirmation dialog before calling the existing draw API; failed draws remain visible within the dialog and successful draws close it.
+- Shared modal styling is applied consistently with labelled dialog semantics, Escape/cancel controls, responsive layout, and protection from dismissing while a request is saving. No backend or persistence contract changed.
+
+Validation:
+
+- Focused Angular management specs passed: 26/26.
+- Angular production build passed. Existing router unused-import, browser-mapping, and initial bundle-budget warnings remain.
+
+### Management Navigation Consolidation — 2026-10-21
+
+Implemented after explicit approval of a UI-only scope.
+
+- Added a Lottery management dashboard entry that opens the existing Admin-protected draw screen and renamed that screen consistently; draw authorization and persistence behavior are unchanged.
+- Combined card activity and purchase history into one management page, with separate, truthful empty states. The current API does not expose admin-wide card or purchase-history listing endpoints, so this change does not fabricate or expose user-scoped records.
+- Redirected the legacy `/admin/cards` route to `/admin/purchases`; the `/admin/winners` route remains unchanged.
+- Updated English/Hebrew copy and focused dashboard, purchases, and lottery management tests. No backend, model, migration, or API changes were made.
+
+Validation:
+
+- Angular production build passed with existing initial-bundle and catalog-style budget warnings.
+- Focused Angular tests compiled, but Karma could not launch ChromeHeadless in this environment. VS Code test discovery also reported no matching test items.
+- `git diff --check` passed for the changed implementation and plan files.
+
+### Annual Lottery Management — 2026-10-21
+
+Implemented after approval of the annual-event workflow: one annual event processes every active present atomically and does not partially draw if any present lacks enough paid cards.
+
+- Added Admin-only lottery list/create/update/process endpoints. The event date uses the existing `Lottery.Time` (`DateOnly`) field; the selected calendar year identifies the annual event. Date edits are rejected once the event has winners or is complete.
+- Annual event processing selects the configured number of distinct active, non-deleted, paid cards for every active present, persists all winners against the same `LotteryId`, and marks `IsMadeOut` only when all processing succeeds. Relational processing uses a serializable transaction; repeat processing is rejected.
+- Scoped the legacy per-present draw guard to the selected lottery so a present can be drawn again for a later annual event. Legacy per-present draws now require an explicit existing lottery ID instead of silently creating one.
+- Enforced one non-deleted lottery per calendar year in the application create/update flow. The existing schema has no unique year constraint; no model or migration was changed. Database-level uniqueness remains a separate schema approval if required.
+- Added ISO `yyyy-MM-dd` DateOnly JSON handling because the API uses Newtonsoft.Json 12 and Angular sends/reads the `Lottery.Time` date as a string.
+- Replaced the single-present admin draw screen with annual lottery add/update/list/process controls, all-active-present summary, confirmation, errors, and persisted results. `/winner` now redirects to the guarded annual management route.
+- Added backend coverage for DateOnly JSON, duplicate-year prevention, edits after winners, complete multi-present processing, insufficient-card all-or-nothing behavior, empty present lists, repeat processing, and reusing a present in a later year. Added focused Angular service and management coverage.
+
+Validation:
+
+- Angular production build passed with the existing initial bundle and catalogue-style budget warnings.
+- Focused Angular tests compiled, but Karma could not launch ChromeHeadless in this environment.
+- Backend tests could not run: MSBuild was denied access to `C:\Users\משתמש\.gitconfig` by the sandbox. No workaround or retry was attempted.
+- No model, migration, database update, or live authenticated API test was performed.
 
 ## Phase 6: Lottery
 
@@ -562,3 +676,175 @@ Validation:
 Residual risk:
 
 - Role-name uniqueness is checked case-insensitively in application code because the current schema has no unique role-name constraint. Concurrent role creation or simultaneous first-time seeding across multiple API instances could race; adding a database uniqueness constraint requires a separately approved migration.
+
+## Admin Management Menu Back Link (2026-10-08)
+
+- Added an English/Hebrew back-arrow link to `/admin` on all eight management screens: presents, donors, categories, roles, users, cards, winners, and purchases. The arrow mirrors in RTL layouts.
+- Kept the change limited to navigation and presentation; no API, CRUD, authorization, or persistence behavior changed.
+
+Validation:
+
+- Focused management component tests: 35 passed, 0 failed.
+- Angular production build: passed. Existing unused `RouterLink`, browser-mapping-data, and initial-bundle-budget warnings remain.
+
+## Catalogue Add-to-Basket Action (2026-10-08)
+
+- Added an add-to-basket action to every catalogue present for authenticated users only. The UI disables concurrent adds and shows accessible, localized success and server-error feedback.
+- Reused the existing authorized `POST /api/card` endpoint with only the selected `presentId`; no backend, model, migration, or purchase-rule changes were made.
+- Aligned Angular `CardService.addCard` and the existing cards page with the verified plain-text success response from the controller, preserving server error messages.
+- Added English and Hebrew labels and focused tests for authentication visibility, per-present buttons, pending state, request payload/response type, success, and failure.
+
+Validation:
+
+- Focused catalogue and card tests: 12 passed, 0 failed.
+- Angular production build: passed. Existing unused `RouterLink`, browser-mapping-data, and initial-bundle-budget warnings remain.
+- `git diff --check`: passed.
+
+## API Notification Scope and Toast Background Follow-Up (2026-10-21)
+
+### Approved changes
+
+- Limit global API toast notifications for successful responses to action requests using non-GET HTTP methods (for example, add-to-cart, registration, payment, and management actions). Suppress successful GET fetch notifications, but retain global error toasts for failed GET fetches. Keep existing page loading, empty, and inline failure states unchanged.
+- Continue to display non-empty API messages for action responses and action HTTP errors, retaining the successful-login JWT exclusion.
+- Change the toast surface from status-tinted green/red backgrounds to one muted slate-indigo surface (`#262a3d`) consistent with the dark theme. Preserve the semantic success/error edge stripe, status label, and accessible announcement.
+- Update focused interceptor and toast styling tests/documentation only; no API, business, backend, or persistence changes.
+
+### Exact files and validation
+
+- `frontend/src/app/interceptors/api-message-interceptor.ts`: classify notification eligibility by request method; skip all GET success/error message notification.
+- `frontend/src/app/interceptors/api-message-interceptor.spec.ts`: assert GET success is silent, GET failures still notify, while mutation success/error messages still appear and response/error propagation plus login-token exclusion remain intact.
+- `frontend/src/styles.scss`: use a consistent muted slate-indigo toast background while retaining severity indicators.
+- `frontend/src/app/services/apiMessageService/api-message-service.spec.ts`: verify both toast variants retain their semantic classes and requested surface styling if testable from configuration.
+- Run `npm.cmd run build`, focused Angular tests, and `git diff --check`; report browser-launch constraints separately.
+
+### Risks and boundary
+
+- GET failures can display both the requested global toast and the existing inline error state; this is retained by explicit user choice.
+- Do not alter user-owned or unrelated pre-existing work.
+
+### Implementation result
+
+- Approved by the user with the clarification that successful GET fetches are silent, but GET fetch failures still display a toast.
+- The interceptor now suppresses toast display only for successful GET responses. Failed GETs and non-GET action responses continue through the global toast service.
+- Replaced the success/error-specific surface fills with one muted slate-indigo (`#262a3d`) background while preserving semantic severity borders and labels.
+
+Validation:
+
+- `npm.cmd run build`: passed. Existing bundle-size, catalogue stylesheet budget, and browser-mapping-data warnings remain.
+- `npm.cmd test -- --watch=false`: the full test bundle compiled without TypeScript errors; Karma could not launch Chrome, so browser test assertions were not run.
+- `git diff --check`: passed.
+
+## Personal Area Consolidation (2026-10-08)
+
+- Replaced the separate customer “My Cards” and “My Purchases” navigation links with one guarded Personal Area link.
+- Expanded the Personal Area to show the signed-in user's name, email, and phone from the existing JWT claims, plus the user's cards from the existing owner-scoped API. Added paid/unpaid status and links to existing card management and checkout routes.
+- Added English/Hebrew copy and focused navbar, Personal Area, and auth-claim coverage. Updated JWT payload decoding to preserve UTF-8 identity values such as Hebrew names.
+- No backend, API, model, migration, purchase, or payment behavior was changed. Existing card and payment routes remain available.
+
+Validation:
+
+- VS Code diagnostics reported no issues in the changed TypeScript and Angular template files.
+- Focused Angular tests and `npm run build` could not run: the Windows sandbox rejected PowerShell before command execution because local network access is not enabled. The test runner also could not discover Angular spec files directly.
+
+Follow-up:
+
+- Re-run the focused frontend specs and production build when local command execution is available.
+
+## Approved Cross-Cutting Remediation (2026-10-08)
+
+The approved remediation addressed exposed configuration, development payment boundaries, winner-count semantics, server-authoritative administration, and environment-specific host/CORS configuration without changing the database schema.
+
+- Removed the JWT signing key and database connection string from checked-in Development settings. Startup now requires `JWTSettings__SecretKey` and `ConnectionStrings__DefaultConnection`; local `.env*` and appsettings override files are ignored except `.env.example`.
+- Added explicit `AllowedHosts` and `Cors__AllowedOrigins__N` configuration validation. Development settings allow only the local Angular origin; other environments must provide their own host and CORS values.
+- Replaced the generic payment route with `POST /api/card/development-payment`. The backend returns 404 outside Development and compares the submitted amount to the server-calculated total for the authenticated user's active, non-deleted unpaid cards. The Angular production build disables the development-payment action.
+- Defined `Present.Quantity` as the number of distinct paid cards selected as winners, not a limit on ticket sales. Draws reject insufficient eligible cards and persist all configured winners and lottery completion together in a relational transaction.
+- Kept client-side guards as navigation convenience; administrative controller authorization remains enforced by the backend. Added focused authorization metadata coverage.
+- Updated onboarding and user-facing English/Hebrew copy for the operational settings and winner-count semantics.
+
+Validation and residual work:
+
+- Workspace diagnostics reported no errors in the files previously checked; this is not a substitute for builds or tests.
+- Focused backend/frontend tests and builds were not successfully executed because command execution was blocked by the Windows sandbox. The test runner did not discover Angular specs when passed individual spec-file paths.
+- The replacement JWT secret and production database connection must still be provisioned in the trusted deployment environment, and the service must be redeployed. Operational rotation could not be performed from this workspace.
+- Previously exposed values may remain in Git history. No history rewrite was performed; assess history cleanup separately and coordinate any required credential rotation.
+- Existing historical draws were not migrated. Validate database-backed relational transaction behavior, end-to-end authorization, and the production environment configuration before release.
+
+## Catalogue Quantity Selection and Present Detail Add-to-Basket (2026-10-21)
+
+- Added a quantity selector and add-to-basket action to authenticated catalogue cards and the single-present detail view. Catalogue controls reveal on hover/focus and stay visible on touch/no-hover devices.
+- Extended the existing authenticated `POST /api/card` request with a quantity defaulting to one. The server creates separate unpaid card rows for the authenticated owner and saves the batch together; request quantity is limited to 1–100 as a technical safety boundary, not by inventory.
+- Preserved the existing rule that `Present.Quantity` is the winner count, not a ticket-sales limit. No entity, migration, ownership, or payment behavior changed.
+- Added English/Hebrew UI copy and focused frontend/backend coverage for quantity payloads, one-card compatibility, owner/payment state, invalid quantity, request feedback, and unavailable/completed presents.
+
+Validation status:
+
+- The VS Code test runner did not discover the Angular spec paths. The backend test target reported a build failure without exposing diagnostic output.
+- Direct CLI validation could not run because the Windows sandbox could not start shell commands while local network access was disabled. Backend/frontend tests and builds remain unverified and should be rerun after command execution is enabled.
+
+## App-Wide API Response Message Toasts (2026-10-21)
+
+- Added a frontend-only API message interceptor and queued Angular Material snack bars for non-empty API result messages and plain-text responses. Toasts are bottom-centered, dismissible, direction-aware, and labeled with localized success/error status and dismiss text.
+- Preserved API payloads and HTTP errors, limited notifications to the configured API, and kept existing page-level fallback and validation/loading states without rendering the raw server message twice.
+- Excluded successful `/auth/login` messages because the API contract uses that field for the JWT. Human-readable login failures still appear.
+- Aligned the card-removal frontend response type with the controller's existing plain-text message response so a successful deletion is not followed by a false page-level failure.
+- Updated action components to avoid repeating successful server messages inline. Added focused interceptor, queue, and component coverage.
+
+Validation:
+
+- `npm.cmd run build`: passed. Existing browser-mapping-data, initial bundle-size, and catalogue stylesheet budget warnings remain.
+- The focused and full Angular test bundles compiled, but Karma could not launch Chrome in this environment, so assertions did not execute.
+- `git diff --check`: passed.
+
+## Personal Area Details Presentation (2026-10-22)
+
+- Added a localized hover title and accessible description to the authenticated Personal Area navigation link in English and Hebrew. Navigation remains a normal link for keyboard and touch users.
+- Refined the profile panel into a compact identity and contact layout. The name and email are each shown once; the existing phone and read-only notice remain visible.
+- Preserved the existing JWT claim source, guarded route, card history, and checkout behavior. No API, backend, model, migration, or payment changes were made.
+
+Validation:
+
+- `npm.cmd run build` from `frontend`: passed. Existing browser-mapping-data and bundle/style budget warnings remain.
+- The focused navbar and Personal Area test bundles compiled, but Karma could not launch Chrome, so test assertions could not execute.
+- `git diff --check`: passed.
+- Browser smoke inspection confirmed the navigation link and localized helper content render. The locally generated test token was rejected by the API (401), so the authenticated page redirected before a complete live-data or visual-hover check.
+
+## Donor Presents in Personal Area (2026-10-22)
+
+- Added a Donor-role-only personal-area section that loads the authenticated user's donated presents, including inactive and soft-deleted presents, with localized loading, empty, retry, and failure states.
+- Added `GET /api/present/myPresents`, authorized for the Donor role and scoped server-side to the authenticated `NameIdentifier`; no client-supplied donor ID is accepted.
+- Reused the existing `Present.DonorId` relationship and included inactive records. No entity, migration, or database changes were made.
+- Added backend donor-filter coverage (including soft-deleted records) and role-authorization coverage, plus frontend service/component coverage for role gating and inactive-present display.
+
+Validation:
+
+- `npm.cmd run build` from `frontend`: passed. Existing initial-bundle and stylesheet budget warnings remain.
+- Focused Personal Area and PresentService test bundles compiled, but Karma could not launch ChromeHeadless, so the assertions did not execute.
+- Focused backend tests could not run because the sandbox denied access to `C:\Users\משתמש\.gitconfig` while MSBuild read repository information.
+- `git diff --check` passed for the feature files and plan update. The full worktree check still reports pre-existing trailing whitespace in `frontend/src/app/services/authService/auth-service.ts`, which was not changed for this feature.
+
+## Present Category Names in API Responses (2026-10-22)
+
+- Added nullable `categoryName` to app-facing present response data and nested card present data. Category names are fetched in batches, including for inactive or soft-deleted categories, without changing entities or database schema.
+- Applied the response mapping to `GET /api/present/getAllPresents`, `GET /api/present/{id}`, donor-authorized `GET /api/present/myPresents`, authenticated card reads, and development-payment results.
+- Updated catalogue, present detail, card, checkout, personal-area, present-management, and winner views to display the associated category name from API data. Added localized fallback text when a category has no name.
+- Added mapper/DAL and frontend component regression coverage. Existing routes, authorization, and purchase/payment/lottery rules remain unchanged.
+
+Validation:
+
+- Backend `dotnet build` with an isolated output directory: passed with 0 errors and the existing two package vulnerability warnings.
+- `npm.cmd run build` from `frontend`: passed. Existing browser-mapping, initial bundle-size, and stylesheet budget warnings remain.
+- Focused backend tests compiled, but VSTest aborted because it could not connect to the testhost; assertions did not execute. Focused Angular test bundles compiled, but Karma could not launch ChromeHeadless; assertions did not execute.
+- `git diff --check` reports only pre-existing trailing whitespace in `frontend/src/app/services/authService/auth-service.ts`; no files changed for this feature were reported.
+
+## Local Present Image Uploads (2026-10-22)
+
+- Added an Admin-only multipart image-upload endpoint. JPEG, PNG, and WebP file signatures are checked, files are limited to 5 MB, names are generated by the server, and files are stored under the API's `wwwroot/uploads/presents` directory and served as static files.
+- Present writes now accept only the generated local image-path format. The present-management form uploads a selected file before saving, retains an existing local image when editing, and requires replacement of legacy external URLs before they can be saved again.
+- Catalogue cards, present details, and the management preview resolve local image paths against the API origin. Existing external images can still display during transition; bulk import of legacy URLs was explicitly deferred.
+- No model, migration, or database changes were made. Runtime image files are excluded from Git.
+
+Validation:
+
+- Backend solution build passed with isolated output and existing package vulnerability warnings.
+- Angular production build passed with existing bundle and stylesheet budget warnings.
+- Focused backend tests compiled but VSTest could not connect to the testhost. Focused Angular test bundles compiled but ChromeHeadless did not start, so test assertions were not executed.

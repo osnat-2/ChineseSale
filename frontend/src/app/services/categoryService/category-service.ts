@@ -12,10 +12,26 @@ export class CategoryService {
   private readonly httpClient = inject(HttpClient);
   private readonly http = inject(HttpService);
 
+  private readonly url = `${this.http.url}category`;
+
   getAllCategories(includeInactive = false): Observable<Result<categoryModel>> {
-    const url = `${this.http.url}category`;
     return includeInactive
-      ? this.httpClient.get<Result<categoryModel>>(url, { params: { includeInactive: 'true' } })
-      : this.httpClient.get<Result<categoryModel>>(url);
+      ? this.httpClient.get<Result<categoryModel>>(this.url, { params: { includeInactive: 'true' } })
+      : this.httpClient.get<Result<categoryModel>>(this.url);
+  }
+
+  createCategory(category: Pick<categoryModel, 'name'> & { isActive?: boolean }): Observable<Result<categoryModel>> {
+    return this.httpClient.post<Result<categoryModel>>(this.url, category);
+  }
+
+  updateCategory(
+    id: number,
+    category: Pick<categoryModel, 'name'> & { isActive?: boolean }
+  ): Observable<Result<categoryModel>> {
+    return this.httpClient.put<Result<categoryModel>>(`${this.url}/${id}`, category);
+  }
+
+  deleteCategory(id: number): Observable<Result<categoryModel>> {
+    return this.httpClient.delete<Result<categoryModel>>(`${this.url}/${id}`);
   }
 }
